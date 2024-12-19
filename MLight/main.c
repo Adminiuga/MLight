@@ -27,6 +27,7 @@
 #else
 #include "sl_system_process_action.h"
 #endif // SL_CATALOG_KERNEL_PRESENT
+#include "app_button_press.h"
 
 #ifdef EMBER_TEST
 #define main nodeMain
@@ -34,6 +35,7 @@
 
 void app_init(void)
 {
+  app_button_press_enable();
 }
 
 void app_process_action(void)

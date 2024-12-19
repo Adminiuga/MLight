@@ -24,6 +24,7 @@
 #endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
 #include "app/framework/util/af-main.h"
 #include "network-steering.h"
+#include "app_button_press.h"
 
 #include "app/framework/plugin/reporting/reporting.h"
 
@@ -40,18 +41,10 @@
 #include "sl_dmp_ui_stub.h"
 #endif // SL_CATALOG_ZIGBEE_DISPLAY_PRESENT
 
-#if defined(SL_CATALOG_SIMPLE_BUTTON_PRESENT)
-#include "sl_simple_button.h"
-#include "sl_simple_button_instances.h"
-
 #define BUTTON0         0
 #define BUTTON1         1
 
-static uint8_t lastButton;
-static bool longPress = false;
 static bool leavingNwk = false;
-static sl_zigbee_event_t button_event;
-#endif //SL_CATALOG_SIMPLE_BUTTON_PRESENT
 
 #if defined(SL_CATALOG_LED0_PRESENT)
 #include "sl_led.h"
@@ -80,26 +73,25 @@ static bool identifying = false;
 static void startIdentifying(void);
 static void stopIdentifying(void);
 static void setDefaultReportEntry(void);
-#if defined(SL_CATALOG_SIMPLE_BUTTON_PRESENT)
 static void toggleOnoffAttribute(void);
-#endif // SL_CATALOG_SIMPLE_BUTTON_PRESENT
 
-//--------------
-// Event handler
-
-#if defined(SL_CATALOG_SIMPLE_BUTTON_PRESENT)
-void buttonEventHandler(sl_zigbee_event_t *event)
+void app_button_press_cb(uint8_t button, uint8_t duration)
 {
-  if (lastButton == BUTTON0) {
-    toggleOnoffAttribute();
-  } else if (lastButton == BUTTON1) {
+  bool longPress = ( APP_BUTTON_PRESS_DURATION_LONG == duration )
+                   || ( APP_BUTTON_PRESS_DURATION_VERYLONG == duration );
+ emberAfAppPrintln("Button- %d, duration: %d", button, duration);
+  if ( BUTTON0 == button ) {
+    if ( duration == APP_BUTTON_PRESS_DURATION_SHORT ) toggleOnoffAttribute();
+
     EmberNetworkStatus state = emberAfNetworkState();
     if (state == EMBER_NO_NETWORK) {
+      // no network, short or long press
       emberAfPluginNetworkSteeringStart();
       sl_dmp_ui_display_zigbee_state(DMP_UI_JOINING);
     } else {
-      if (!leavingNwk) { // Ignore button1 events while leaving.
+      if (!leavingNwk) { // Ignore button events while leaving.
         if (!longPress) {
+          // has network, short press 
           if (identifying) {
             emberAfAppPrintln("Button- Identify stop");
             stopIdentifying();
@@ -108,6 +100,7 @@ void buttonEventHandler(sl_zigbee_event_t *event)
             startIdentifying();
           }
         } else {
+          // has network, long press
           leavingNwk = true;
           emberAfAppPrintln("Button- Leave Nwk");
           emberLeaveNetwork();
@@ -117,7 +110,6 @@ void buttonEventHandler(sl_zigbee_event_t *event)
     }
   }
 }
-#endif // SL_CATALOG_SIMPLE_BUTTON_PRESENT
 
 //----------------------
 // Implemented Callbacks
@@ -127,9 +119,6 @@ void buttonEventHandler(sl_zigbee_event_t *event)
  */
 void emberAfMainInitCallback(void)
 {
-  #if defined(SL_CATALOG_SIMPLE_BUTTON_PRESENT)
-  sl_zigbee_af_isr_event_init(&button_event, buttonEventHandler);
-  #endif // SL_CATALOG_SIMPLE_BUTTON_PRESENT
   #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
   rz_led_blink_init();
   #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
@@ -368,52 +357,10 @@ void emberAfRadioNeedsCalibratingCallback(void)
   sl_mac_calibrate_current_channel();
 }
 
-#if defined(SL_CATALOG_SIMPLE_BUTTON_PRESENT)
-#define BUTTON_LONG_PRESS_TIME_MSEC    3000
-
-/***************************************************************************//**
- * A callback called in interrupt context whenever a button changes its state.
- *
- * @remark Can be implemented by the application if required. This function
- * can contain the functionality to be executed in response to changes of state
- * in each of the buttons, or callbacks to appropriate functionality.
- *
- * @note The button state should not be updated in this function, it is updated
- * by specific button driver prior to arriving here
- *
-   @param[out] handle             Pointer to button instance
- ******************************************************************************/
-void sl_button_on_change(const sl_button_t *handle)
-{
-  static uint16_t buttonPressTime;
-  uint16_t currentTime = 0;
-  if ( sl_button_get_state(handle) == SL_SIMPLE_BUTTON_PRESSED) {
-    if (SL_SIMPLE_BUTTON_INSTANCE(BUTTON1) == handle) {
-      buttonPressTime = halCommonGetInt16uMillisecondTick();
-    }
-  } else if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_RELEASED) {
-    if (SL_SIMPLE_BUTTON_INSTANCE(BUTTON1) == handle) {
-      currentTime = halCommonGetInt16uMillisecondTick();
-      lastButton = BUTTON1;
-      if ((currentTime - buttonPressTime) > BUTTON_LONG_PRESS_TIME_MSEC) {
-        longPress = true;
-      }
-    } else {
-      lastButton = BUTTON0;
-    }
-
-    sl_zigbee_common_rtos_wakeup_stack_task();
-    sl_zigbee_event_set_active(&button_event);
-  }
-}
-#endif // SL_CATALOG_SIMPLE_BUTTON_PRESENT
-
 //-----------------
 // Static functions
 
-#if defined(SL_CATALOG_SIMPLE_BUTTON_PRESENT)
 static EmberEUI64 lightEUI;
-
 static void toggleOnoffAttribute(void)
 {
   EmberStatus status;
@@ -450,7 +397,6 @@ static void toggleOnoffAttribute(void)
                                  ZCL_BOOLEAN_ATTRIBUTE_TYPE);
   emberAfAppPrintln("write to onoff attr: 0x%x", status);
 }
-#endif // SL_CATALOG_SIMPLE_BUTTON_PRESENT
 
 static void setDefaultReportEntry(void)
 {
