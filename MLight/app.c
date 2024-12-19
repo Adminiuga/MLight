@@ -75,6 +75,11 @@ static void stopIdentifying(void);
 static void setDefaultReportEntry(void);
 static void toggleOnoffAttribute(void);
 
+void emberAfMainTickCallback()
+{
+  app_button_press_step();
+}
+
 void app_button_press_cb(uint8_t button, uint8_t duration)
 {
   bool longPress = ( APP_BUTTON_PRESS_DURATION_LONG == duration )
