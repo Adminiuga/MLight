@@ -53,6 +53,9 @@ static bool leavingNwk = false;
 #define led_turn_off(led) sl_led_turn_off(led)
 #define led_toggle(led) sl_led_toggle(led)
 #define LED0     (&sl_led_led0)
+#if defined(SL_CATALOG_LED1_PRESENT)
+#define LED1     (&sl_led_led1)
+#endif // SL_CATALOG_LED1_PRESENT
 #else // !SL_CATALOG_LED0_PRESENT
 #define led_turn_on(led)
 #define led_turn_off(led)
@@ -264,13 +267,21 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
 
     if (status == EMBER_ZCL_STATUS_SUCCESS) {
       if (data == 0x00) {
+        #if defined(SL_CATALOG_LED1_PRESENT)
+        led_turn_off(LED1);
+        #else
         led_turn_off(LED0);
+        #endif // SL_CATALOG_LED1_PRESENT
         sl_dmp_ui_light_off();
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_OFF);
 #endif
       } else {
+        #if defined(SL_CATALOG_LED1_PRESENT)
+        led_turn_on(LED1);
+        #else
         led_turn_on(LED0);
+        #endif // SL_CATALOG_LED1_PRESENT
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_ON);
 #endif
