@@ -1,6 +1,6 @@
 {
   "fileFormat": 2,
-  "featureLevel": 99,
+  "featureLevel": 106,
   "creator": "zap",
   "keyValuePairs": [
     {
@@ -19,7 +19,7 @@
   "package": [
     {
       "pathRelativity": "relativeToZap",
-      "path": "../../../../../../../../../app/zcl/zcl-zap.json",
+      "path": "..\\..\\..\\..\\..\\..\\..\\SimplicityStudio\\SDKs\\gecko_sdk\\app\\zcl\\zcl-zap.json",
       "type": "zcl-properties",
       "category": "zigbee",
       "version": 1,
@@ -27,7 +27,7 @@
     },
     {
       "pathRelativity": "relativeToZap",
-      "path": "../../../../../gen-template/gen-templates.json",
+      "path": "..\\..\\..\\..\\..\\..\\..\\SimplicityStudio\\SDKs\\gecko_sdk\\protocol\\zigbee\\app\\framework\\gen-template\\gen-templates.json",
       "type": "gen-templates-json",
       "category": "zigbee",
       "version": "zigbee-v0"
@@ -41,14 +41,16 @@
         "code": 257,
         "profileId": 260,
         "label": "LO-dimmablelight",
-        "name": "LO-dimmablelight"
+        "name": "LO-dimmablelight",
+        "deviceTypeOrder": 0
       },
       "deviceTypes": [
         {
           "code": 257,
           "profileId": 260,
           "label": "LO-dimmablelight",
-          "name": "LO-dimmablelight"
+          "name": "LO-dimmablelight",
+          "deviceTypeOrder": 0
         }
       ],
       "deviceVersions": [
@@ -1360,14 +1362,16 @@
         "code": 269,
         "profileId": 260,
         "label": "LO-extendedcolorlight",
-        "name": "LO-extendedcolorlight"
+        "name": "LO-extendedcolorlight",
+        "deviceTypeOrder": 0
       },
       "deviceTypes": [
         {
           "code": 269,
           "profileId": 260,
           "label": "LO-extendedcolorlight",
-          "name": "LO-extendedcolorlight"
+          "name": "LO-extendedcolorlight",
+          "deviceTypeOrder": 0
         }
       ],
       "deviceVersions": [
@@ -3457,14 +3461,16 @@
         "code": 97,
         "profileId": 41440,
         "label": "GP-proxy-basic",
-        "name": "GP-proxy-basic"
+        "name": "GP-proxy-basic",
+        "deviceTypeOrder": 0
       },
       "deviceTypes": [
         {
           "code": 97,
           "profileId": 41440,
           "label": "GP-proxy-basic",
-          "name": "GP-proxy-basic"
+          "name": "GP-proxy-basic",
+          "deviceTypeOrder": 0
         }
       ],
       "deviceVersions": [
@@ -3626,21 +3632,24 @@
       "endpointTypeIndex": 0,
       "profileId": "0x0104",
       "endpointId": 1,
-      "networkId": 0
+      "networkId": 0,
+      "parentEndpointIdentifier": null
     },
     {
       "endpointTypeName": "Touchlink",
       "endpointTypeIndex": 1,
       "profileId": "0x0104",
       "endpointId": 2,
-      "networkId": 0
+      "networkId": 0,
+      "parentEndpointIdentifier": null
     },
     {
       "endpointTypeName": "GreenPower",
       "endpointTypeIndex": 2,
       "profileId": "0xA1E0",
       "endpointId": 242,
-      "networkId": 0
+      "networkId": 0,
+      "parentEndpointIdentifier": null
     }
   ]
 }

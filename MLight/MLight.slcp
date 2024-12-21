@@ -76,6 +76,10 @@ configuration:
     value: SLI_ZIGBEE_NETWORK_DEVICE_TYPE_SLEEPY_END_DEVICE
   - name: SLI_ZIGBEE_PRIMARY_NETWORK_SECURITY_TYPE
     value: SLI_ZIGBEE_NETWORK_SECURITY_TYPE_3_0
+  - name: SL_ZIGBEE_APP_FRAMEWORK_BACKOFF_SLEEP_MS
+    value: 5
+  - name: SL_ZIGBEE_APP_FRAMEWORK_STAY_AWAKE_WHEN_NOT_JOINED
+    value: 0
   - name: SL_IOSTREAM_USART_VCOM_RESTRICT_ENERGY_MODE_TO_ALLOW_RECEPTION
     value: 0
     condition:
@@ -85,7 +89,7 @@ configuration:
     condition:
       - iostream_eusart
   - name: SL_CLI_PROMPT_STRING
-    value: "\"DMPLightSed>\""
+    value: "\"MLight>\""
   - name: SL_BT_CONFIG_USER_ADVERTISERS
     value: 3
   - name: SL_BT_CONFIG_MAX_CONNECTIONS
