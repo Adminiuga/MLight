@@ -1,14 +1,39 @@
 #include "af.h"
+#include "app.h"
 #include "app_button_press.h"
 #include "device-nwk-join-control.h"
-#include "app.h"
+#include "network-steering.h"
+
+#if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
+#include "rz_led_blink.h"
+#define COMMISSIONING_STATUS_LED 0
+#else // !SL_CATALOG_RZ_LED_BLINK_PRESENT
+#define rz_led_blink_blink_led_on(time, led)
+#define rz_led_blink_blink_led_off(time, led)
+#define rz_led_blink_counted(count, time, led)
+#define rz_led_blink_pattern(count, length, pattern, ledIndex)
+#endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
+
+#define LED_BLINK_SHORT_MS         100
+#define LED_BLINK_LONG_MS          750
+#define LED_BLINK_IDENTIFY_MS      500
+#define LED_BLINK_NETWORK_UP_COUNT 3
+
 
 typedef struct {
-    bool leavingNwk;
+  bool leavingNwk;
+  uint8_t  joinAttempt;         // ReJoin Attempt Number
+  bool     isCurrentlySteering; // true if currently is trying to steer the network
+  bool     haveNetworkToken;    // is there network token (join or rejoin)
+  uint32_t currentChannel;      // current channel
 } DeviceNwkJoinControl_State_t;
 
 static DeviceNwkJoinControl_State_t dnjcState = {
-    .leavingNwk = false
+    .leavingNwk = false,
+    .joinAttempt = 0,
+    .isCurrentlySteering = false,
+    .haveNetworkToken = false,
+    .currentChannel = 0,
 };
 
 //----------------
@@ -142,6 +167,41 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
     startIdentifying();
   } else {
     stopIdentifying();
+  }
+}
+
+/**
+ * @brief Indicate network status. Short 3 blinks is on network.
+ *        Short and Long blink -- no parent. Long blink -- no network.
+ */
+void dnjcIndicateNetworkStatus(void)
+{
+  EmberNetworkStatus state = emberAfNetworkState();
+  switch (state) {
+    case EMBER_JOINED_NETWORK:
+      rz_led_blink_counted(
+        LED_BLINK_NETWORK_UP_COUNT,
+        LED_BLINK_SHORT_MS,
+        COMMISSIONING_STATUS_LED
+      );
+      break;
+
+    case EMBER_JOINED_NETWORK_NO_PARENT:
+      uint16_t pattern[] = {
+        LED_BLINK_SHORT_MS, // LED On blink
+        LED_BLINK_LONG_MS,  // interblink pause
+        LED_BLINK_LONG_MS,  // LED On Blink
+        LED_BLINK_SHORT_MS  // interblink pause
+      };
+      rz_led_blink_pattern(1, sizeof(pattern), pattern, COMMISSIONING_STATUS_LED);
+      break;
+
+    case EMBER_NO_NETWORK:
+      rz_led_blink_blink_led_on(LED_BLINK_LONG_MS, COMMISSIONING_STATUS_LED);
+      break;
+
+    default:
+      break;
   }
 }
 

@@ -23,7 +23,6 @@
 #include "sl_zigbee_debug_print.h"
 #endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
 #include "app/framework/util/af-main.h"
-#include "network-steering.h"
 #include "app_button_press.h"
 
 #include "app/framework/plugin/reporting/reporting.h"
@@ -51,8 +50,6 @@ static bool identifying = false;
 //---------------------
 // Forward declarations
 
-static void startIdentifying(void);
-static void stopIdentifying(void);
 static void setDefaultReportEntry(void);
 static void toggleOnoffAttribute(void);
 
