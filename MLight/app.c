@@ -35,6 +35,7 @@
 #endif
 
 #include "app.h"
+#include "hw/rgb_light.h"
 
 #include "sl_dmp_ui_stub.h"
 
@@ -157,20 +158,12 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
 
     if (status == EMBER_ZCL_STATUS_SUCCESS) {
       if (data == 0x00) {
-        #if defined(SL_CATALOG_LED1_PRESENT)
-        led_turn_off(LED1);
-        #else
-        led_turn_off(LED0);
-        #endif // SL_CATALOG_LED1_PRESENT
+        rgb_light_turnoff();
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_OFF);
 #endif
       } else {
-        #if defined(SL_CATALOG_LED1_PRESENT)
-        led_turn_on(LED1);
-        #else
-        led_turn_on(LED0);
-        #endif // SL_CATALOG_LED1_PRESENT
+        rgb_light_turnon();
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_ON);
 #endif

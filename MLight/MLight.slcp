@@ -160,6 +160,8 @@ source:
   - path: app.c
   - path: mods/device-nwk-join-control.h
   - path: mods/device-nwk-join-control.c
+  - path: hw/rgb_light.h
+  - path: hw/rgb_light.c
 
 config_file:
   - path: config/zcl/zcl_config.zap
