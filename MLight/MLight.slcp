@@ -143,7 +143,10 @@ define:
 
 source:
   - path: main.c
+  - path: app.h
   - path: app.c
+  - path: mods/device-nwk-join-control.h
+  - path: mods/device-nwk-join-control.c
 
 config_file:
   - path: config/zcl/zcl_config.zap

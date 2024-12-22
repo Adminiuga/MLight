@@ -23,7 +23,6 @@
 #include "sl_zigbee_debug_print.h"
 #endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
 #include "app/framework/util/af-main.h"
-#include "network-steering.h"
 #include "app_button_press.h"
 
 #include "app/framework/plugin/reporting/reporting.h"
@@ -35,32 +34,13 @@
 #include "sl_ble_event_handler.h"
 #endif
 
-#ifdef SL_CATALOG_ZIGBEE_DISPLAY_PRESENT
-#include "sl_dmp_ui.h"
-#else // !SL_CATALOG_ZIGBEE_DISPLAY_PRESENT
+#include "app.h"
+
 #include "sl_dmp_ui_stub.h"
-#endif // SL_CATALOG_ZIGBEE_DISPLAY_PRESENT
-
-#define BUTTON0         0
-#define BUTTON1         1
-
-static bool leavingNwk = false;
-
-#if defined(SL_CATALOG_LED0_PRESENT)
-#include "sl_led.h"
-#include "sl_simple_led_instances.h"
-#define led_turn_on(led) sl_led_turn_on(led)
-#define led_turn_off(led) sl_led_turn_off(led)
-#define led_toggle(led) sl_led_toggle(led)
-#define LED0     (&sl_led_led0)
-#else // !SL_CATALOG_LED0_PRESENT
-#define led_turn_on(led)
-#define led_turn_off(led)
-#define led_toggle(led)
-#endif // SL_CATALOG_LED0_PRESENT
 
 #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
 #include <rz_led_blink.h>
+#include "mods/device-nwk-join-control.h"
 #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
 
 #define SOURCE_ADDRESS_LEN 8
@@ -70,8 +50,6 @@ static bool identifying = false;
 //---------------------
 // Forward declarations
 
-static void startIdentifying(void);
-static void stopIdentifying(void);
 static void setDefaultReportEntry(void);
 static void toggleOnoffAttribute(void);
 
@@ -80,40 +58,20 @@ void emberAfMainTickCallback()
   app_button_press_step();
 }
 
-void app_button_press_cb(uint8_t button, uint8_t duration)
+void dnjcButtonPressCb(uint8_t button, uint8_t duration)
 {
-  bool longPress = ( APP_BUTTON_PRESS_DURATION_LONG == duration )
-                   || ( APP_BUTTON_PRESS_DURATION_VERYLONG == duration );
- emberAfAppPrintln("Button- %d, duration: %d", button, duration);
-  if ( BUTTON0 == button ) {
-    if ( duration == APP_BUTTON_PRESS_DURATION_SHORT ) toggleOnoffAttribute();
+  emberAfAppPrintln("Button- %d, duration: %d", button, duration);
+  if ( BUTTON0 == button
+       && duration == APP_BUTTON_PRESS_DURATION_SHORT ) toggleOnoffAttribute();
+}
 
-    EmberNetworkStatus state = emberAfNetworkState();
-    if (state == EMBER_NO_NETWORK) {
-      // no network, short or long press
-      emberAfPluginNetworkSteeringStart();
-      sl_dmp_ui_display_zigbee_state(DMP_UI_JOINING);
-    } else {
-      if (!leavingNwk) { // Ignore button events while leaving.
-        if (!longPress) {
-          // has network, short press 
-          if (identifying) {
-            emberAfAppPrintln("Button- Identify stop");
-            stopIdentifying();
-          } else if (state == EMBER_JOINED_NETWORK) {
-            emberAfAppPrintln("Button- Identify start");
-            startIdentifying();
-          }
-        } else {
-          // has network, long press
-          leavingNwk = true;
-          emberAfAppPrintln("Button- Leave Nwk");
-          emberLeaveNetwork();
-          emberClearBindingTable();
-        }
-      }
-    }
-  }
+/**
+ * @brief this is called by the Device Network Join Control plugin
+ *        when the device successfully joins the network.
+ */
+void dnjcDeviceJoinedNwkCb(void)
+{
+  setDefaultReportEntry();
 }
 
 //----------------------
@@ -127,38 +85,6 @@ void emberAfMainInitCallback(void)
   #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
   rz_led_blink_init();
   #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
-}
-
-/** @brief Stack Status
- *
- * This function is called by the application framework from the stack status
- * handler.  This callbacks provides applications an opportunity to be notified
- * of changes to the stack status and take appropriate action. The framework
- * will always process the stack status after the callback returns.
- */
-void emberAfStackStatusCallback(EmberStatus status)
-{
-  EmberNetworkStatus nwkState = emberAfNetworkState();
-  emberAfCorePrintln("Stack status=0x%X, nwkState=%d", status, emberAfNetworkState());
-
-  switch (nwkState) {
-    case EMBER_JOINED_NETWORK:
-      sl_dmp_ui_display_zigbee_state(DMP_UI_NETWORK_UP);
-      startIdentifying();
-      break;
-    case EMBER_NO_NETWORK:
-      sl_dmp_ui_display_zigbee_state(DMP_UI_NO_NETWORK);
-#if defined(SL_CATALOG_SIMPLE_BUTTON_PRESENT)
-      leavingNwk = false; // leave has completed.
-#endif // SL_CATALOG_SIMPLE_BUTTON_PRESENT
-      stopIdentifying();
-      break;
-    case EMBER_JOINED_NETWORK_NO_PARENT:
-      stopIdentifying();
-      break;
-    default:
-      break;
-  }
 }
 
 /** @brief Start feedback.
@@ -180,7 +106,6 @@ void emberAfPluginIdentifyStartFeedbackCallback(uint8_t endpoint,
   if (identifyTime > 0) {
     identifying = true;
     emberAfAppPrintln("Start Identifying for %dS", identifyTime);
-    sl_dmp_ui_zigbee_permit_join(true);
     emberAfSetDefaultPollControlCallback(EMBER_AF_SHORT_POLL);  // Use short poll while identifying.
   }
 }
@@ -198,42 +123,10 @@ void emberAfPluginIdentifyStopFeedbackCallback(uint8_t endpoint)
   if (identifying) {
     identifying = false;
     emberAfAppPrintln("Stop Identifying");
-    sl_dmp_ui_zigbee_permit_join(false);
     emberAfSetDefaultPollControlCallback(EMBER_AF_LONG_POLL); // Revert to long poll when we stop identifying.
   }
 }
 
-/** @brief Complete network steering.
- *
- * This callback is fired when the Network Steering plugin is complete.
- *
- * @param status On success this will be set to EMBER_SUCCESS to indicate a
- * network was joined successfully. On failure this will be the status code of
- * the last join or scan attempt. Ver.: always
- *
- * @param totalBeacons The total number of 802.15.4 beacons that were heard,
- * including beacons from different devices with the same PAN ID. Ver.: always
- * @param joinAttempts The number of join attempts that were made to get onto
- * an open Zigbee network. Ver.: always
- *
- * @param finalState The finishing state of the network steering process. From
- * this, one is able to tell on which channel mask and with which key the
- * process was complete. Ver.: always
- */
-void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
-                                                  uint8_t totalBeacons,
-                                                  uint8_t joinAttempts,
-                                                  uint8_t finalState)
-{
-  if (status == EMBER_SUCCESS) {
-    setDefaultReportEntry();
-    startIdentifying();
-    sl_dmp_ui_display_zigbee_state(DMP_UI_NETWORK_UP);
-  } else {
-    stopIdentifying();
-    sl_dmp_ui_display_zigbee_state(DMP_UI_NO_NETWORK);
-  }
-}
 
 /** @brief Post Attribute Change
  *
@@ -264,17 +157,23 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
 
     if (status == EMBER_ZCL_STATUS_SUCCESS) {
       if (data == 0x00) {
+        #if defined(SL_CATALOG_LED1_PRESENT)
+        led_turn_off(LED1);
+        #else
         led_turn_off(LED0);
-        sl_dmp_ui_light_off();
+        #endif // SL_CATALOG_LED1_PRESENT
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_OFF);
 #endif
       } else {
+        #if defined(SL_CATALOG_LED1_PRESENT)
+        led_turn_on(LED1);
+        #else
         led_turn_on(LED0);
+        #endif // SL_CATALOG_LED1_PRESENT
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_ON);
 #endif
-        sl_dmp_ui_light_on();
       }
       if ((sl_dmp_ui_get_light_direction() == DMP_UI_DIRECTION_BLUETOOTH)
           || (sl_dmp_ui_get_light_direction() == DMP_UI_DIRECTION_SWITCH)) {
@@ -285,7 +184,6 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
         zb_ble_dmp_set_source_address(SwitchEUI);
 #endif
       }
-
       sl_dmp_ui_set_light_direction(DMP_UI_DIRECTION_INVALID);
     }
   }
@@ -419,26 +317,3 @@ static void setDefaultReportEntry(void)
   emberAfPluginReportingConfigureReportedAttribute(&reportingEntry);
 }
 
-static bool writeIdentifyTime(uint16_t identifyTime)
-{
-  EmberAfStatus status =
-    emberAfWriteServerAttribute(emberAfPrimaryEndpoint(),
-                                ZCL_IDENTIFY_CLUSTER_ID,
-                                ZCL_IDENTIFY_TIME_ATTRIBUTE_ID,
-                                (uint8_t *)&identifyTime,
-                                sizeof(identifyTime));
-
-  return (status == EMBER_ZCL_STATUS_SUCCESS);
-}
-
-static void startIdentifying(void)
-{
-  writeIdentifyTime(180);
-}
-
-static void stopIdentifying(void)
-{
-  writeIdentifyTime(0);
-
-  sl_dmp_ui_zigbee_permit_join(false);
-}
