@@ -3,6 +3,7 @@
 #include "app_button_press.h"
 #include "device-nwk-join-control.h"
 #include "network-steering.h"
+#include "sl_zigbee_debug_print.h"
 
 #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
 #include "rz_led_blink.h"
@@ -115,7 +116,7 @@ void app_button_press_cb(uint8_t button, uint8_t duration)
   if ( BUTTON0 == button
        && !(dnjcState.leavingNwk)) // Ignore button events while leaving.
   {
-    EmberNetworkStatus state = emberAfNetworkState();
+    EmberNetworkStatus state = dnjcIndicateNetworkState();
     if (state == EMBER_NO_NETWORK) {
       // no network, short or long press -> start network steering
       emberAfPluginNetworkSteeringStart();
@@ -124,13 +125,13 @@ void app_button_press_cb(uint8_t button, uint8_t duration)
       if (longPress) {
         // network & long press -> leave network
         dnjcState.leavingNwk = true;
-        emberAfAppPrintln("Button- Leave Nwk");
+        sl_zigbee_app_debug_println("Button- Leave Nwk");
         emberLeaveNetwork();
         emberClearBindingTable();
       } else {
         // has network, short press 
         if (state == EMBER_JOINED_NETWORK) {
-          emberAfAppPrintln("Button- Identify start");
+          sl_zigbee_app_debug_println("Button- Identify start");
           startIdentifying();
         }
       }
@@ -163,6 +164,9 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
                                                   uint8_t joinAttempts,
                                                   uint8_t finalState)
 {
+  sl_zigbee_app_debug_println(
+    "Network Steering Complete: status=0x%X, totalBeacons=%d, joinAttempts=%d, finalState=%d",
+    status, totalBeacons, joinAttempts, finalState);
   if (status == EMBER_SUCCESS) {
     startIdentifying();
   } else {
@@ -173,11 +177,14 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
 /**
  * @brief Indicate network status. Short 3 blinks is on network.
  *        Short and Long blink -- no parent. Long blink -- no network.
+ * @return current network status
  */
-void dnjcIndicateNetworkStatus(void)
+EmberNetworkStatus dnjcIndicateNetworkState(void)
 {
-  EmberNetworkStatus state = emberAfNetworkState();
-  switch (state) {
+  EmberNetworkStatus nwkState = emberAfNetworkState();
+  sl_zigbee_app_debug_println("Indicating Current Network State: %d", nwkState);
+
+  switch (nwkState) {
     case EMBER_JOINED_NETWORK:
       rz_led_blink_counted(
         LED_BLINK_NETWORK_UP_COUNT,
@@ -203,6 +210,8 @@ void dnjcIndicateNetworkStatus(void)
     default:
       break;
   }
+
+  return nwkState;
 }
 
 //*****************

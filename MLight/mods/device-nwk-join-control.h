@@ -5,7 +5,7 @@
  * @brief Indicate network status. Short 3 blinks is on network.
  *        Short and Long blink -- no parent. Long blink -- no network.
  */
-void dnjcIndicateNetworkStatus(void);
+EmberNetworkStatus dnjcIndicateNetworkState(void);
 
 /**
  * @brief Weak definition of emberAfStackStatusCallback proxy.
