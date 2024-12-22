@@ -167,6 +167,7 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
   sl_zigbee_app_debug_println(
     "Network Steering Complete: status=0x%X, totalBeacons=%d, joinAttempts=%d, finalState=%d",
     status, totalBeacons, joinAttempts, finalState);
+  dnjcIndicateNetworkState();
   if (status == EMBER_SUCCESS) {
     startIdentifying();
   } else {
@@ -198,7 +199,6 @@ EmberNetworkStatus dnjcIndicateNetworkState(void)
         LED_BLINK_SHORT_MS, // LED On blink
         LED_BLINK_LONG_MS,  // interblink pause
         LED_BLINK_LONG_MS,  // LED On Blink
-        LED_BLINK_SHORT_MS  // interblink pause
       };
       rz_led_blink_pattern(1, sizeof(pattern), pattern, COMMISSIONING_STATUS_LED);
       break;
