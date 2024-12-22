@@ -38,6 +38,22 @@ SL_WEAK void dnjcButtonPressCb(uint8_t button, uint8_t duration)
   (void) duration;
 }
 
+/**
+ * @brief Callback when devices successfuly joins the network
+ */
+SL_WEAK void dnjcDeviceJoinedNwkCb(void)
+{
+}
+
+/**
+ * @brief Callback after device leaves the network
+ */
+SL_WEAK void dnjcDeviceLeftNwkCb(void)
+{
+}
+
+//----------------------
+// Implementation
 
 /** @brief Stack Status
  *
@@ -123,7 +139,6 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
                                                   uint8_t finalState)
 {
   if (status == EMBER_SUCCESS) {
-    setDefaultReportEntry();
     startIdentifying();
   } else {
     stopIdentifying();

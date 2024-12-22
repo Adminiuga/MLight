@@ -19,4 +19,14 @@ void dnjcStackStatusCb(EmberStatus status);
  */
 void dnjcButtonPressCb(uint8_t button, uint8_t duration);
 
+/**
+ * @brief Callback when devices successfuly joins the network
+ */
+void dnjcDeviceJoinedNwkCb(void);
+
+/**
+ * @brief Callback after device leaves the network
+ */
+void dnjcDeviceLeftNwkCb(void);
+
 #endif // _DEVICE_NWK_JOIN_CONTROL_H_

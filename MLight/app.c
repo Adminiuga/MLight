@@ -41,6 +41,7 @@
 
 #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
 #include <rz_led_blink.h>
+#include "mods/device-nwk-join-control.h"
 #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
 
 #define SOURCE_ADDRESS_LEN 8
@@ -65,6 +66,15 @@ void dnjcButtonPressCb(uint8_t button, uint8_t duration)
   emberAfAppPrintln("Button- %d, duration: %d", button, duration);
   if ( BUTTON0 == button
        && duration == APP_BUTTON_PRESS_DURATION_SHORT ) toggleOnoffAttribute();
+}
+
+/**
+ * @brief this is called by the Device Network Join Control plugin
+ *        when the device successfully joins the network.
+ */
+void dnjcDeviceJoinedNwkCb(void)
+{
+  setDefaultReportEntry();
 }
 
 //----------------------
