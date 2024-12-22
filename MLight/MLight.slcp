@@ -56,6 +56,12 @@ component:
   - id: zigbee_ble_event_handler
   - id: zigbee_ble_dmp_cli
   - id: zigbee_application_bootloader
+  - {id: zigbee_ota_bootload}
+  - {id: zigbee_ota_client}
+  - {id: zigbee_ota_client_policy}
+  - {id: zigbee_ota_storage_simple}
+  - {id: zigbee_ota_storage_simple_eeprom}
+  - {id: slot_manager}
   - {from: raz1_custom_components, id: custom_tb2}
   - {from: raz1_custom_components, id: rz_led_blink}
 
@@ -136,7 +142,14 @@ configuration:
     value: 53
   - name: configMAX_TASK_NAME_LEN
     value: 30
-
+  - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
+    value: 2286
+    condition:
+      - zigbee_ota_client
+  - name: EMBER_AF_PLUGIN_OTA_STORAGE_SIMPLE_EEPROM_GECKO_BOOTLOADER_STORAGE_SUPPORT
+    value: USE_FIRST_SLOT
+    condition:
+      - zigbee_ota_client
 
 define:
   - name: OS_CFG_COMPAT_INIT
