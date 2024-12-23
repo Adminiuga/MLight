@@ -2,6 +2,7 @@
 #include "rgb_light.h"
 #include "sl_zigbee_debug_print.h"
 #include "sl_simple_rgb_pwm_led.h"
+#include "sl_simple_rgb_pwm_led_rgb_led0_config.h"
 
 #define MAX(a, b) (a > b) ? a : b
 
