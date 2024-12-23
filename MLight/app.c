@@ -298,7 +298,7 @@ static void toggleOnoffAttribute(void)
                                  CLUSTER_MASK_SERVER,
                                  (int8u *) &data,
                                  ZCL_BOOLEAN_ATTRIBUTE_TYPE);
-  emberAfAppPrintln("write to onoff attr: 0x%x", status);
+  emberAfAppPrintln("write 0x%x to onoff attr: 0x%x", data, status);
 }
 
 static void setDefaultReportEntry(void)
