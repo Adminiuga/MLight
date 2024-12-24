@@ -30,6 +30,15 @@ component:
   - id: bluetooth_feature_gatt
   - id: bluetooth_feature_gatt_server
   - id: bluetooth_feature_sm
+  - id: simple_button
+    instance:
+      - btn0
+  - id: simple_led
+    instance:
+      - led0
+  - id: simple_rgb_pwm_led
+    instance:
+      - rgb_led0
   - id: zigbee_zll
   - id: zigbee_zcl_framework_core
   - id: zigbee_zcl_cli
