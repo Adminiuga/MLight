@@ -40,6 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
+      contents: write
     outputs:
       sdk_version: ${{ env.sdk_version }}
       image_name: ghcr.io/${{ steps.lower.outputs.repository_owner }}/silabs-project-builder:${{ env.sdk_version }}
