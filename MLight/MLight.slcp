@@ -74,7 +74,7 @@ component:
   - {id: zigbee_ota_storage_simple}
   - {id: zigbee_ota_storage_simple_eeprom}
   - {id: slot_manager}
-  - {from: raz1_custom_components, id: custom_tb2}
+  - {from: raz1_custom_components, id: brd_mgm210_expansion}
   - {from: raz1_custom_components, id: rz_led_blink}
 
 configuration:

@@ -42,7 +42,10 @@ void rgb_light_init(void)
 void rgb_light_turnon()
 {
   rgb_light_enable();
-  sl_simple_rgb_pwm_led_turn_on(sl_simple_rgb_pwm_led_rgb_led0.led_common.context);
+  //sl_simple_rgb_pwm_led_turn_on(sl_simple_rgb_pwm_led_rgb_led0.led_common.context);
+  GPIO_PinOutSet(SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RED_PORT, SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RED_PIN);
+  GPIO_PinOutSet(SL_SIMPLE_RGB_PWM_LED_RGB_LED0_GREEN_PORT, SL_SIMPLE_RGB_PWM_LED_RGB_LED0_GREEN_PIN);
+  GPIO_PinOutSet(SL_SIMPLE_RGB_PWM_LED_RGB_LED0_BLUE_PORT, SL_SIMPLE_RGB_PWM_LED_RGB_LED0_BLUE_PIN);
 }
 
 /**
@@ -50,7 +53,10 @@ void rgb_light_turnon()
  */
 void rgb_light_turnoff()
 {
-  sl_simple_rgb_pwm_led_turn_off(sl_simple_rgb_pwm_led_rgb_led0.led_common.context);
+  GPIO_PinOutClear(SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RED_PORT, SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RED_PIN);
+  GPIO_PinOutClear(SL_SIMPLE_RGB_PWM_LED_RGB_LED0_GREEN_PORT, SL_SIMPLE_RGB_PWM_LED_RGB_LED0_GREEN_PIN);
+  GPIO_PinOutClear(SL_SIMPLE_RGB_PWM_LED_RGB_LED0_BLUE_PORT, SL_SIMPLE_RGB_PWM_LED_RGB_LED0_BLUE_PIN);
+  //sl_simple_rgb_pwm_led_turn_off(sl_simple_rgb_pwm_led_rgb_led0.led_common.context);
   rgb_light_disable();
 }
 
