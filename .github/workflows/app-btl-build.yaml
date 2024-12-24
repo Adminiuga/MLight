@@ -58,8 +58,7 @@ jobs:
       image_name: ${{ inputs.image_name }}
       project_name: MLight
       device: ${{ inputs.device }}
-      components: >
-        ${{ inputs.board != '' && format('{0},', inputs.board) || '' }}
+      board: ${{ inputs.board }}
       configuration:  |
         SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
       extra_c_defs: ""
@@ -96,8 +95,8 @@ jobs:
 
       export_project_name: "app_btl"
       device: ${{ inputs.device }}
+      board: ${{ inputs.board }}
       components: >
-        ${{ inputs.board != '' && format('{0},', inputs.board) || '' }}
         bootloader_compression_lzma
       configuration:  |
         BOOTLOADER_WRITE_DISABLE:1,

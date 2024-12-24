@@ -49,6 +49,11 @@ on:
         required: true
         type: string
 
+      board:
+        required: false
+        type: string
+        default: ''
+
       metadata_extra:
         required: false
         default: "null"
