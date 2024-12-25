@@ -226,11 +226,12 @@ jobs:
         if: "${{ inputs.sdkpatchpath != '' }}"
         run: |
           cd ${{ env.PROJECT_NAME }}/gecko_sdk_${{ inputs.sdk_version }}
-          for patch in "../../${{ inputs.sdkpatchpath }}"/*.patch
+          PATCH_PATH="../../${{ inputs.sdkpatchpath }}"
+          test -d "$PATCH_PATH" && for patch in $(find "$PATCH_PATH" -name '*.patch')
           do
               echo "Applying ${patch}"
               patch -p1 < $patch
-          done
+          done || true
 
       - name: Update OTA version
         if: ${{ env.IS_BTL != 'yes' }}
