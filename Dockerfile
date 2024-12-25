@@ -28,26 +28,22 @@ RUN \
        less \
     && apt-get clean
 
+WORKDIR /tmp
 # Install Simplicity Commander (unfortunately no stable URL available, this
 # is known to be working with Commander_linux_x86_64_1v15p0b1306.tar.bz).
 RUN \
     curl -O https://www.silabs.com/documents/login/software/SimplicityCommander-Linux.zip \
-    && unzip SimplicityCommander-Linux.zip \
+    && unzip -q SimplicityCommander-Linux.zip \
     && tar -C /opt -xjf SimplicityCommander-Linux/Commander_linux_x86_64_*.tar.bz \
     && rm -r SimplicityCommander-Linux \
     && rm SimplicityCommander-Linux.zip
 
-ENV PATH="$PATH:/opt/commander"
-
 # Install Silicon Labs Configurator (slc)
 RUN \
     curl -O https://www.silabs.com/documents/login/software/slc_cli_linux.zip \
-    && unzip -d /opt slc_cli_linux.zip \
+    && unzip -d /opt -q slc_cli_linux.zip \
     && chmod go-w /opt/slc_cli \
     && rm slc_cli_linux.zip
-
-ENV PATH="$PATH:/opt/slc_cli"
-
 
 # Install ARM GCC embedded toolchain
 RUN \
@@ -55,13 +51,14 @@ RUN \
     && xzcat arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi.tar.xz | tar -C /opt -xf -\
     && rm arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi.tar.xz
 
-ENV PATH="$PATH:/opt/arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi/bin"
+ENV PATH="$PATH:/opt/arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi/bin:/opt/slc_cli:/opt/commander"
+ENV ARM_GCC_PATH="/opt/arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi"
 
 # Install ZAP adapter
 RUN \
     curl -OL https://github.com/project-chip/zap/releases/download/${ZAP_TOOL_RELEASE}/zap-linux-x64.zip \
     && umask 022 \
-    && unzip -d /opt/zap zap-linux-x64.zip \
+    && unzip -d /opt/zap -q zap-linux-x64.zip \
     && rm zap-linux-x64.zip
 
 ENV STUDIO_ADAPTER_PACK_PATH="/opt/zap:/opt/commander"
@@ -86,4 +83,3 @@ RUN \
     && slc signature trust --sdk "/gecko_sdk/" \
     && slc configuration \
            --gcc-toolchain="/opt/arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi/"
-
