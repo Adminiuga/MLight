@@ -83,6 +83,7 @@ jobs:
     name: Zigbee MGM210 HAT App
     needs: build-container
     strategy:
+      fail-fast: false
       matrix:
         include:
           - device: EFR32MG12P332F1024GL125
