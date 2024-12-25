@@ -59,13 +59,13 @@ jobs:
       project_name: MLight
       device: ${{ inputs.device }}
       components: ${{ inputs.board }}
-      configuration:  |
+      configuration: >-
         SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
       metadata_extra: "{}"
       ota_string: ${{ inputs.app_ota_string }}
-      sdk_extensions: |
+      sdk_extensions: >-
         "https://github.com/Adminiuga/Raz1_custom_components_extension"
       flavor: ${{ inputs.flavor }}
       image_id: ${{ inputs.image_id }}
@@ -94,14 +94,16 @@ jobs:
 
       export_project_name: "app_btl"
       device: ${{ inputs.device }}
-      components: >
+      components: >-
         ${{ inputs.components }},
         bootloader_compression_lzma
-      configuration:  |
+      configuration: >-
         BOOTLOADER_WRITE_DISABLE:1,
         BOOTLOADER_VERSION_MAIN_CUSTOMER:${{ inputs.btl_version }},
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
+      sdk_extensions: >-
+        "https://github.com/Adminiuga/Raz1_custom_components_extension"
       sdkpatchpath: ''
       metadata_extra: "{}"
       flavor: ${{ inputs.flavor }}
