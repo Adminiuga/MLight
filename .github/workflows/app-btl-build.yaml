@@ -58,7 +58,7 @@ jobs:
       image_name: ${{ inputs.image_name }}
       project_name: MLight
       device: ${{ inputs.device }}
-      components: ${{ inputs.board }}
+      components: ${{ inputs.components }}
       configuration: >-
         SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
       extra_c_defs: ""
