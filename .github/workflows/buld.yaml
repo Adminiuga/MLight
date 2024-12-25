@@ -87,17 +87,17 @@ jobs:
       matrix:
         include:
           - device: EFR32MG12P332F1024GL125
-            board: custom_tb2
+            components: custom_tb2;raz1_custom_components
             flavor: TBS2
             image_id: "2287"
           - device: MGM210LA22JIF
-            board: brd_mgm210_expansion
+            components: brd_mgm210_expansion;raz1_custom_components
             flavor: MGM210
     uses: ./.github/workflows/app-btl-build.yaml
     with:
       sdk_version: ${{ needs.build-container.outputs.sdk_version }}
       device: ${{ matrix.device }}
-      board: ${{ matrix.board }}
+      components: ${{ matrix.components }}
       build_btl: ${{ github.event.inputs.build_btl != '' && inputs.build_btl || false }}
       image_name: ${{ needs.build-container.outputs.image_name }}
       btl_version: ${{ vars.btl_version != '' && vars.btl_version || '2' }}

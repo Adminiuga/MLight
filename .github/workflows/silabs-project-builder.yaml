@@ -26,6 +26,7 @@ on:
         type: string
 
       components:
+        description: extra components to add to the project. Comma separated
         required: false
         type: string
 
@@ -48,11 +49,6 @@ on:
       device:
         required: true
         type: string
-
-      board:
-        required: false
-        type: string
-        default: ''
 
       metadata_extra:
         required: false
