@@ -91,7 +91,9 @@ jobs:
             flavor: TBS2
             image_id: "2287"
           - device: MGM210LA22JIF
-            components: brd_mgm210_expansion;raz1_custom_components
+            components: >-
+              brd_mgm210_expansion;raz1_custom_components,
+              mx25_flash_shutdown_usart
             flavor: MGM210
     uses: ./.github/workflows/app-btl-build.yaml
     with:
