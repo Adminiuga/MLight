@@ -130,7 +130,7 @@ jobs:
       run:
         shell: su --shell=/bin/bash builder {0}
     outputs:
-      project_name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}
+      project_name: ${{ env.PROJECT_NAME }}
       artifact_name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}
       ota_version: ${{ steps.ota_version.outputs.ota_version }}
 
