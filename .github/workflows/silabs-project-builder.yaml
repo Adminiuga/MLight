@@ -73,6 +73,12 @@ on:
         default: ''
         type: string
 
+      model:
+        required: false
+        description: Model attribute
+        default: 'Just a light'
+        type: string
+
     outputs:
       project_name:
         description: Name of the generated SLC project
@@ -127,6 +133,7 @@ jobs:
       project_name: ${{ env.PROJECT_NAME }}
       artifact_name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}
       ota_version: ${{ steps.ota_version.outputs.ota_version }}
+      model_name: ${{ steps.ota_version.outputs.model_name }}
 
     steps:
       - uses: actions/checkout@v3.3.0
@@ -169,6 +176,10 @@ jobs:
           echo "BUILD_DATE=${META_DATE}" >> "$GITHUB_OUTPUT"
           echo "BUILD_ID_MOD100=${BUILD_ID_MOD100}" >> "$GITHUB_OUTPUT"
 
+          MODEL_NAME="${{ inputs.model }} (${{ inputs.flavor }})"
+          echo "MODEL Name = '${MODEL_NAME}'"
+          echo "MODEL_NAME=${MODEL_NAME}" >> "$GITHUB_OUTPUT"
+
       - name: Update dateCode in ZAP config
         if: ${{ env.IS_BTL != 'yes' }}
         run: |
@@ -188,6 +199,15 @@ jobs:
           SW_BUILD_ID="SHA1: $(echo ${{ github.sha }} | cut -c1-10)"
           echo "Date Code = '${SW_BUILD_ID}'"
           jq "${FILTER} |= \"${SW_BUILD_ID}\"" "zcl_config.zap~" > "zcl_config.zap"
+
+      - name: Update Model in ZAP config
+        id: zcl_model
+        if: ${{ env.IS_BTL != 'yes' }}
+        run: |
+          cd "${{ env.PROJECT_NAME }}/config/zcl"
+          cp "zcl_config.zap" "zcl_config.zap~"
+          FILTER='(. | .endpointTypes[].clusters[] | select(.name == "Basic") | .attributes[] | select(.code == 5)).defaultValue'
+          jq "${FILTER} |= \"${{ steps.ota_version.outputs.model_name }}\"" "zcl_config.zap~" > "zcl_config.zap"
 
       - name: Generate New Project
         if: env.IS_NEW_PROJECT == 'yes'

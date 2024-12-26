@@ -95,7 +95,7 @@ jobs:
             components: >-
               brd_mgm210_expansion;raz1_custom_components,
               mx25_flash_shutdown_usart
-            flavor: MGM210
+            flavor: MLight
     uses: ./.github/workflows/app-btl-build.yaml
     with:
       sdk_version: ${{ needs.build-container.outputs.sdk_version }}
