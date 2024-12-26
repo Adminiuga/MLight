@@ -52,7 +52,7 @@ RUN \
     && rm arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi.tar.xz
 
 ENV PATH="$PATH:/opt/arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi/bin:/opt/slc_cli:/opt/commander"
-ENV ARM_GCC_PATH="/opt/arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi"
+ENV ARM_GCC_DIR="/opt/arm-gnu-toolchain-${GCC_ARM_VERSION}-x86_64-arm-none-eabi"
 
 # Install ZAP adapter
 RUN \
