@@ -74,7 +74,6 @@ component:
   - {id: zigbee_ota_storage_simple}
   - {id: zigbee_ota_storage_simple_eeprom}
   - {id: slot_manager}
-  - {from: raz1_custom_components, id: brd_mgm210_expansion}
   - {from: raz1_custom_components, id: rz_led_blink}
 
 configuration:
@@ -168,6 +167,10 @@ configuration:
     value: 30
   - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
     value: 2286
+    condition:
+      - zigbee_ota_client
+  - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_FIRMWARE_VERSION
+    value: 241226000
     condition:
       - zigbee_ota_client
   - name: EMBER_AF_PLUGIN_OTA_STORAGE_SIMPLE_EEPROM_GECKO_BOOTLOADER_STORAGE_SUPPORT

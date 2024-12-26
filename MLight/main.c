@@ -27,6 +27,9 @@
 #else
 #include "sl_system_process_action.h"
 #endif // SL_CATALOG_KERNEL_PRESENT
+#ifdef SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
+#include "sl_mx25_flash_shutdown.h"
+#endif // SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
 #include "app_button_press.h"
 #include "hw/rgb_light.h"
 
@@ -38,6 +41,9 @@ void app_init(void)
 {
   app_button_press_enable();
   rgb_light_init();
+  #ifdef SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
+  void sl_mx25_flash_shutdown();
+  #endif // SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
 }
 
 void app_process_action(void)
