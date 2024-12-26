@@ -19,13 +19,14 @@ on:
       project_name:
         required: true
         type: string
-      
+
       src_project_path:
         description: "Source path of the project. defaults to $GITHUB_WORKSPACE"
         required: false
         type: string
 
       components:
+        description: extra components to add to the project. Comma separated
         required: false
         type: string
 
@@ -72,10 +73,10 @@ on:
         default: ''
         type: string
 
-      image_id:
+      model:
         required: false
-        description: GBL OTA Image ID
-        default: ''
+        description: Model attribute
+        default: 'Just a light'
         type: string
 
     outputs:
@@ -97,17 +98,17 @@ env:
   IS_NEW_PROJECT: ${{ inputs.export_project_name != '' && 'yes' || 'no' }}
   IS_BTL: ${{ startsWith(inputs.project_name, 'bootloader') && 'yes' || '' }}
   branch_to_ota: >-
-    ${{ github.ref_name == 'main' 
+    ${{ github.ref_name == 'main'
         && '0'
         || (startsWith(github.ref_name, 'rc')
-            && '5'
+            && '3'
             || ( github.ref_name == 'dev'
-                 && '9'
-                 || '8')
+                 && '8'
+                 || '6')
         )
     }}
   branch_to_build_type: >-
-    ${{ github.ref_name == 'main' 
+    ${{ github.ref_name == 'main'
         && 'rel'
         || (startsWith(github.ref_name, 'rc')
             && 'rc'
@@ -129,12 +130,13 @@ jobs:
       run:
         shell: su --shell=/bin/bash builder {0}
     outputs:
-      project_name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}
+      project_name: ${{ env.PROJECT_NAME }}
       artifact_name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}
       ota_version: ${{ steps.ota_version.outputs.ota_version }}
+      model_name: ${{ steps.ota_version.outputs.model_name }}
 
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4
       - name: Adjust permission
         shell: bash
         run: chown -R builder .
@@ -174,6 +176,10 @@ jobs:
           echo "BUILD_DATE=${META_DATE}" >> "$GITHUB_OUTPUT"
           echo "BUILD_ID_MOD100=${BUILD_ID_MOD100}" >> "$GITHUB_OUTPUT"
 
+          MODEL_NAME="${{ inputs.model }} (${{ inputs.flavor }})"
+          echo "MODEL Name = '${MODEL_NAME}'"
+          echo "MODEL_NAME=${MODEL_NAME}" >> "$GITHUB_OUTPUT"
+
       - name: Update dateCode in ZAP config
         if: ${{ env.IS_BTL != 'yes' }}
         run: |
@@ -194,6 +200,15 @@ jobs:
           echo "Date Code = '${SW_BUILD_ID}'"
           jq "${FILTER} |= \"${SW_BUILD_ID}\"" "zcl_config.zap~" > "zcl_config.zap"
 
+      - name: Update Model in ZAP config
+        id: zcl_model
+        if: ${{ env.IS_BTL != 'yes' }}
+        run: |
+          cd "${{ env.PROJECT_NAME }}/config/zcl"
+          cp "zcl_config.zap" "zcl_config.zap~"
+          FILTER='(. | .endpointTypes[].clusters[] | select(.name == "Basic") | .attributes[] | select(.code == 5)).defaultValue'
+          jq "${FILTER} |= \"${MODEL_ID}\"" "zcl_config.zap~" > "zcl_config.zap"
+
       - name: Generate New Project
         if: env.IS_NEW_PROJECT == 'yes'
         run: |
@@ -205,7 +220,8 @@ jobs:
               --new-project \
               --force \
               --copy-proj-sources --copy-sdk-sources \
-              --configuration="${{ inputs.configuration }}"
+              --configuration="${{ inputs.configuration }}" \
+              --output-type makefile
 
       - name: Generate Existing Project
         if: env.IS_NEW_PROJECT != 'yes'
@@ -215,17 +231,19 @@ jobs:
               --project-file="$(pwd)/${{ inputs.project_name }}/${{ inputs.project_name }}.slcp" \
               --force \
               --copy-sdk-sources \
-              --configuration="${{ inputs.configuration }}"
+              --configuration="${{ inputs.configuration }}" \
+              --output-type makefile
 
       - name: Patch SDK
         if: "${{ inputs.sdkpatchpath != '' }}"
         run: |
           cd ${{ env.PROJECT_NAME }}/gecko_sdk_${{ inputs.sdk_version }}
-          for patch in "../../${{ inputs.sdkpatchpath }}"/*.patch
+          PATCH_PATH="../../${{ inputs.sdkpatchpath }}"
+          test -d "$PATCH_PATH" && for patch in $(find "$PATCH_PATH" -name '*.patch')
           do
               echo "Applying ${patch}"
               patch -p1 < $patch
-          done
+          done || true
 
       - name: Update OTA version
         if: ${{ env.IS_BTL != 'yes' }}
@@ -233,15 +251,7 @@ jobs:
           cd ${{ env.PROJECT_NAME }}/config
           sed -i -E \
               's/^(#define\s+EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_FIRMWARE_VERSION)\s+[0-9]+\s*$/\1 ${{ steps.ota_version.outputs.ota_version }}/' \
-              ota-client-policy-config.h 
-
-      - name: Update OTA Image ID
-        if: ${{ env.IS_BTL != 'yes' && inputs.image_id != '' }}
-        run: |
-          cd ${{ env.PROJECT_NAME }}/config
-          sed -i -E \
-              's/^(#define\s+EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID)\s+[0-9]+\s*$/\1 ${{ inputs.image_id }}/' \
-              ota-client-policy-config.h 
+              ota-client-policy-config.h
 
       - name: Build Firmware
         run: |
@@ -323,14 +333,14 @@ jobs:
               --version ${{ steps.ota_version.outputs.ota_version }} \
               ${{ inputs.ota_string != ''
                   && format('--string "{0}" \', inputs.ota_string)
-                  || '\' 
+                  || '\'
               }}
               --image-type ${{ env.OTA_IMAGE_TYPE_ID }} \
               --manuf-id ${{ env.OTA_MANUFACTURER_ID }} \
               --tag-id 0x0000 \
               --tag-file "${{ env.PROJECT_NAME}}.gbl"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: (success() || failure()) && env.IS_BTL != 'yes'
         name: Upload application firmware
         with:
@@ -341,7 +351,7 @@ jobs:
             ${{ env.PROJECT_NAME }}/build/release/*.hex
             ${{ env.PROJECT_NAME }}/build/release/*.ota
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: (success() || failure()) && env.IS_BTL == 'yes'
         name: Upload bootloader firmware
         with:
@@ -350,7 +360,7 @@ jobs:
             ${{ env.PROJECT_NAME }}/artifact/version.json
             ${{ env.PROJECT_NAME }}/artifact/*.s37
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: (success() || failure()) && vars.ARTIFACT_UPLOAD_SOURCES != ''
         name: Upload generated project sources
         with:

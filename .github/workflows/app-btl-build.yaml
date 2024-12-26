@@ -15,11 +15,16 @@ on:
         required: true
         type: string
 
-      board:
-        description: Board Id
+      components:
+        description: extra components to add to the project, comma separated
         required: true
         type: string
-      
+
+      configuration:
+        description: extra configuration to add to the project, comma separated
+        required: false
+        type: string
+
       build_btl:
         description: "Build Bootloader"
         required: false
@@ -30,7 +35,7 @@ on:
         required: false
         type: string
         default: "ghcr.io/${{ github.repository_owner }}/silabs-project-builder:${{ inputs.sdk_version }}"
-  
+
       app_ota_string:
         required: false
         type: string
@@ -39,11 +44,6 @@ on:
       btl_version:
         required: true
         type: string
-
-      image_id:
-        required: false
-        type: string
-        default: ''
 
       flavor:
         required: true
@@ -58,19 +58,17 @@ jobs:
       image_name: ${{ inputs.image_name }}
       project_name: MLight
       device: ${{ inputs.device }}
-      components: ${{ inputs.board }}
-      configuration:  |
+      components: ${{ inputs.components }}
+      configuration: >-
+        ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
         SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
-      sdkpatchpath: "patches/GeckoSDK"
       metadata_extra: "{}"
       ota_string: ${{ inputs.app_ota_string }}
-      sdk_extensions: |
+      sdk_extensions: >-
         "https://github.com/Adminiuga/Raz1_custom_components_extension"
       flavor: ${{ inputs.flavor }}
-      image_id: ${{ inputs.image_id }}
-
 
   bootloader-build:
     if: inputs.build_btl
@@ -93,20 +91,22 @@ jobs:
               )
         }}
 
-      export_project_name: "app_btl"
+      export_project_name: "MLight_btl"
       device: ${{ inputs.device }}
-      components: >
-        ${{ inputs.board != '' && format('{0},', inputs.board) || '' }}
+      components: >-
+        ${{ startsWith( inputs.device, 'EFR32MG12P') && 'brd4166a' || '' }},
         bootloader_compression_lzma
-      configuration:  |
+      configuration: >-
+        ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
         BOOTLOADER_WRITE_DISABLE:1,
         BOOTLOADER_VERSION_MAIN_CUSTOMER:${{ inputs.btl_version }},
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
+      sdk_extensions: >-
+        "https://github.com/Adminiuga/Raz1_custom_components_extension"
       sdkpatchpath: ''
       metadata_extra: "{}"
       flavor: ${{ inputs.flavor }}
-      image_id: ${{ inputs.image_id }}
 
 
   bootloader-ota:
@@ -131,13 +131,13 @@ jobs:
       btl_project_name: ${{ needs.bootloader-build.outputs.project_name }}
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         name: Download App firmware
         with:
           name: ${{ env.app_artifact_name }}
           path: ${{ env.app_artifact_name }}
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         name: Download bootloader build
         with:
           name: ${{ env.btl_artifact_name }}
@@ -173,25 +173,26 @@ jobs:
             --device ${{ inputs.device }} \
             --metadata "../${{ env.app_artifact_name }}/version.json"
 
-          OTA_FN="${{ env.app_project_name }}-${{ env.ota_version }}-btl" 
+          OTA_FN="${{ env.app_project_name }}-${{ env.ota_version }}-btl"
           /gecko_sdk/protocol/zigbee/tool/image-builder/image-builder-linux \
             --create "$OTA_FN-v${{ steps.btl_meta.outputs.bootloader_version }}.ota" \
             --version ${{ env.ota_version }} \
             ${{ inputs.app_ota_string != ''
               && format('--string "{0}" \', inputs.app_ota_string)
-              || '\' 
+              || '\'
             }}
             --image-type ${{ steps.app_meta.outputs.ota_image_type_id }} \
             --manuf-id ${{ steps.app_meta.outputs.manufacturer_id }} \
             --tag-id 0x0000 \
             --tag-file "${{ env.app_project_name }}-btl.gbl"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         name: Upload bootloader & bootloader OTA image artifact
         with:
-          name: ${{ env.btl_project_name }}
+          name: ${{ env.btl_artifact_name }}
+          overwrite: true
           path: |
-            ${{ env.btl_project_name }}/version.json
-            ${{ env.btl_project_name }}/*.gbl
-            ${{ env.btl_project_name }}/*.s37
-            ${{ env.btl_project_name }}/*.ota
+            ${{ env.btl_artifact_name }}/version.json
+            ${{ env.btl_artifact_name }}/*.gbl
+            ${{ env.btl_artifact_name }}/*.s37
+            ${{ env.btl_artifact_name }}/*.ota
