@@ -19,7 +19,7 @@ on:
       project_name:
         required: true
         type: string
-      
+
       src_project_path:
         description: "Source path of the project. defaults to $GITHUB_WORKSPACE"
         required: false
@@ -98,7 +98,7 @@ env:
   IS_NEW_PROJECT: ${{ inputs.export_project_name != '' && 'yes' || 'no' }}
   IS_BTL: ${{ startsWith(inputs.project_name, 'bootloader') && 'yes' || '' }}
   branch_to_ota: >-
-    ${{ github.ref_name == 'main' 
+    ${{ github.ref_name == 'main'
         && '0'
         || (startsWith(github.ref_name, 'rc')
             && '3'
@@ -108,7 +108,7 @@ env:
         )
     }}
   branch_to_build_type: >-
-    ${{ github.ref_name == 'main' 
+    ${{ github.ref_name == 'main'
         && 'rel'
         || (startsWith(github.ref_name, 'rc')
             && 'rc'
@@ -251,7 +251,7 @@ jobs:
           cd ${{ env.PROJECT_NAME }}/config
           sed -i -E \
               's/^(#define\s+EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_FIRMWARE_VERSION)\s+[0-9]+\s*$/\1 ${{ steps.ota_version.outputs.ota_version }}/' \
-              ota-client-policy-config.h 
+              ota-client-policy-config.h
 
       - name: Build Firmware
         run: |
@@ -333,7 +333,7 @@ jobs:
               --version ${{ steps.ota_version.outputs.ota_version }} \
               ${{ inputs.ota_string != ''
                   && format('--string "{0}" \', inputs.ota_string)
-                  || '\' 
+                  || '\'
               }}
               --image-type ${{ env.OTA_IMAGE_TYPE_ID }} \
               --manuf-id ${{ env.OTA_MANUFACTURER_ID }} \
