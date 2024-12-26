@@ -101,10 +101,10 @@ env:
     ${{ github.ref_name == 'main' 
         && '0'
         || (startsWith(github.ref_name, 'rc')
-            && '5'
+            && '3'
             || ( github.ref_name == 'dev'
-                 && '9'
-                 || '8')
+                 && '8'
+                 || '6')
         )
     }}
   branch_to_build_type: >-
