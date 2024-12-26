@@ -168,6 +168,17 @@ configuration:
   - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
     value: 2286
     condition:
+      - mgm210la22jif
+      - zigbee_ota_client
+  - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
+    value: 2287
+    condition:
+      - efr32mg12p332f1024gl125
+      - zigbee_ota_client
+  - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
+    value: 2288
+    condition:
+      - brd4181b
       - zigbee_ota_client
   - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_FIRMWARE_VERSION
     value: 241226000
