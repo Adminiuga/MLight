@@ -189,9 +189,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         name: Upload bootloader & bootloader OTA image artifact
         with:
-          name: ${{ env.btl_project_name }}
+          name: ${{ env.btl_artifact_name }}
           path: |
-            ${{ env.btl_project_name }}/version.json
-            ${{ env.btl_project_name }}/*.gbl
-            ${{ env.btl_project_name }}/*.s37
-            ${{ env.btl_project_name }}/*.ota
+            ${{ env.btl_artifact_name }}/version.json
+            ${{ env.btl_artifact_name }}/*.gbl
+            ${{ env.btl_artifact_name }}/*.s37
+            ${{ env.btl_artifact_name }}/*.ota
