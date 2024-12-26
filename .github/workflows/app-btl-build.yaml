@@ -95,7 +95,7 @@ jobs:
       export_project_name: "app_btl"
       device: ${{ inputs.device }}
       components: >-
-        ${{ inputs.components }},
+        ${{ startsWith( inputs.device, 'EFR32MG12P') && 'brd4166a' || '' }},
         bootloader_compression_lzma
       configuration: >-
         BOOTLOADER_WRITE_DISABLE:1,
