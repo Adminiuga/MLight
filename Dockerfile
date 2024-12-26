@@ -64,10 +64,8 @@ RUN \
 ENV STUDIO_ADAPTER_PACK_PATH="/opt/zap:/opt/commander"
 ENV POST_BUILD_EXE="/opt/commander/commander"
 
-
 RUN \
-    git clone --depth 1 -b ${GECKO_SDK_VERSION} \
-       https://github.com/SiliconLabs/gecko_sdk.git \
+    git clone --depth 1 -b ${GECKO_SDK_VERSION} https://github.com/SiliconLabs/gecko_sdk.git /gecko_sdk \
     && chmod 755 /gecko_sdk/protocol/zigbee/tool/image-builder/image-builder-linux
 
 
