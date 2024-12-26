@@ -206,7 +206,8 @@ jobs:
               --new-project \
               --force \
               --copy-proj-sources --copy-sdk-sources \
-              --configuration="${{ inputs.configuration }}"
+              --configuration="${{ inputs.configuration }}" \
+              --output-type makefile
 
       - name: Generate Existing Project
         if: env.IS_NEW_PROJECT != 'yes'
@@ -216,7 +217,8 @@ jobs:
               --project-file="$(pwd)/${{ inputs.project_name }}/${{ inputs.project_name }}.slcp" \
               --force \
               --copy-sdk-sources \
-              --configuration="${{ inputs.configuration }}"
+              --configuration="${{ inputs.configuration }}" \
+              --output-type makefile
 
       - name: Patch SDK
         if: "${{ inputs.sdkpatchpath != '' }}"
