@@ -87,14 +87,15 @@ jobs:
       matrix:
         include:
           - device: EFR32MG12P332F1024GL125
-            components: custom_tb2;raz1_custom_components
+            components: >-
+              custom_tb2;raz1_custom_components,
+              mx25_flash_shutdown_usart
             flavor: TBS2
             configuration: >-
               EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID:2287
           - device: MGM210LA22JIF
             components: >-
               brd_mgm210_expansion;raz1_custom_components,
-              mx25_flash_shutdown_usart
             flavor: MLight
     uses: ./.github/workflows/app-btl-build.yaml
     with:
