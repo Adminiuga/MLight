@@ -91,7 +91,7 @@ jobs:
               )
         }}
 
-      export_project_name: "app_btl"
+      export_project_name: "MLight_btl"
       device: ${{ inputs.device }}
       components: >-
         ${{ startsWith( inputs.device, 'EFR32MG12P') && 'brd4166a' || '' }},
