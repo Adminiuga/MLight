@@ -136,7 +136,7 @@ jobs:
       model_name: ${{ steps.ota_version.outputs.model_name }}
 
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v4
       - name: Adjust permission
         shell: bash
         run: chown -R builder .
@@ -207,7 +207,7 @@ jobs:
           cd "${{ env.PROJECT_NAME }}/config/zcl"
           cp "zcl_config.zap" "zcl_config.zap~"
           FILTER='(. | .endpointTypes[].clusters[] | select(.name == "Basic") | .attributes[] | select(.code == 5)).defaultValue'
-          jq "${FILTER} |= \"${{ steps.ota_version.outputs.model_name }}\"" "zcl_config.zap~" > "zcl_config.zap"
+          jq "${FILTER} |= \"${MODEL_ID}\"" "zcl_config.zap~" > "zcl_config.zap"
 
       - name: Generate New Project
         if: env.IS_NEW_PROJECT == 'yes'
@@ -340,7 +340,7 @@ jobs:
               --tag-id 0x0000 \
               --tag-file "${{ env.PROJECT_NAME}}.gbl"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: (success() || failure()) && env.IS_BTL != 'yes'
         name: Upload application firmware
         with:
@@ -351,7 +351,7 @@ jobs:
             ${{ env.PROJECT_NAME }}/build/release/*.hex
             ${{ env.PROJECT_NAME }}/build/release/*.ota
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: (success() || failure()) && env.IS_BTL == 'yes'
         name: Upload bootloader firmware
         with:
@@ -360,7 +360,7 @@ jobs:
             ${{ env.PROJECT_NAME }}/artifact/version.json
             ${{ env.PROJECT_NAME }}/artifact/*.s37
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: (success() || failure()) && vars.ARTIFACT_UPLOAD_SOURCES != ''
         name: Upload generated project sources
         with:
