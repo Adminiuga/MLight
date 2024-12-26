@@ -154,6 +154,10 @@ configuration:
     value: 2286
     condition:
       - zigbee_ota_client
+  - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_FIRMWARE_VERSION
+    value: 241226000
+    condition:
+      - zigbee_ota_client
   - name: EMBER_AF_PLUGIN_OTA_STORAGE_SIMPLE_EEPROM_GECKO_BOOTLOADER_STORAGE_SUPPORT
     value: USE_FIRST_SLOT
     condition:

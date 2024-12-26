@@ -19,6 +19,11 @@ on:
         description: extra components to add to the project, comma separated
         required: true
         type: string
+
+      configuration:
+        description: extra configuration to add to the project, comma separated
+        required: false
+        type: string
       
       build_btl:
         description: "Build Bootloader"
@@ -40,11 +45,6 @@ on:
         required: true
         type: string
 
-      image_id:
-        required: false
-        type: string
-        default: ''
-
       flavor:
         required: true
         type: string
@@ -60,6 +60,7 @@ jobs:
       device: ${{ inputs.device }}
       components: ${{ inputs.components }}
       configuration: >-
+        ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
         SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
@@ -68,8 +69,6 @@ jobs:
       sdk_extensions: >-
         "https://github.com/Adminiuga/Raz1_custom_components_extension"
       flavor: ${{ inputs.flavor }}
-      image_id: ${{ inputs.image_id }}
-
 
   bootloader-build:
     if: inputs.build_btl
@@ -98,6 +97,7 @@ jobs:
         ${{ startsWith( inputs.device, 'EFR32MG12P') && 'brd4166a' || '' }},
         bootloader_compression_lzma
       configuration: >-
+        ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
         BOOTLOADER_WRITE_DISABLE:1,
         BOOTLOADER_VERSION_MAIN_CUSTOMER:${{ inputs.btl_version }},
       extra_c_defs: ""
@@ -107,7 +107,6 @@ jobs:
       sdkpatchpath: ''
       metadata_extra: "{}"
       flavor: ${{ inputs.flavor }}
-      image_id: ${{ inputs.image_id }}
 
 
   bootloader-ota:

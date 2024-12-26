@@ -89,7 +89,8 @@ jobs:
           - device: EFR32MG12P332F1024GL125
             components: custom_tb2;raz1_custom_components
             flavor: TBS2
-            image_id: "2287"
+            configuration: >-
+              EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID:2287
           - device: MGM210LA22JIF
             components: >-
               brd_mgm210_expansion;raz1_custom_components,
@@ -103,6 +104,6 @@ jobs:
       build_btl: ${{ github.event.inputs.build_btl != '' && inputs.build_btl || false }}
       image_name: ${{ needs.build-container.outputs.image_name }}
       btl_version: ${{ vars.btl_version != '' && vars.btl_version || '2' }}
-      image_id: ${{ matrix.image_id }}
       flavor: ${{ matrix.flavor }}
+      configuration: ${{ matrix.configuration }}
 

@@ -73,12 +73,6 @@ on:
         default: ''
         type: string
 
-      image_id:
-        required: false
-        description: GBL OTA Image ID
-        default: ''
-        type: string
-
     outputs:
       project_name:
         description: Name of the generated SLC project
@@ -237,14 +231,6 @@ jobs:
           cd ${{ env.PROJECT_NAME }}/config
           sed -i -E \
               's/^(#define\s+EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_FIRMWARE_VERSION)\s+[0-9]+\s*$/\1 ${{ steps.ota_version.outputs.ota_version }}/' \
-              ota-client-policy-config.h 
-
-      - name: Update OTA Image ID
-        if: ${{ env.IS_BTL != 'yes' && inputs.image_id != '' }}
-        run: |
-          cd ${{ env.PROJECT_NAME }}/config
-          sed -i -E \
-              's/^(#define\s+EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID)\s+[0-9]+\s*$/\1 ${{ inputs.image_id }}/' \
               ota-client-policy-config.h 
 
       - name: Build Firmware
