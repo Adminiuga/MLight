@@ -2,6 +2,9 @@
 #include "sl_component_catalog.h"
 #ifdef SL_CATALOG_POWER_MANAGER_PRESENT
 #include "sl_power_manager.h"
+#if SL_POWER_MANAGER_DEBUG == 1
+#include "sl_power_manager_debug.h"
+#endif // SL_POWER_MANAGER_DEBUG == 1
 #endif // SL_CATALOG_POWER_MANAGER_PRESENT
 #include "rgb_light.h"
 #include "sl_zigbee_debug_print.h"
@@ -35,7 +38,9 @@ static void rgb_light_disable(void);
 #define rgb_light_enable(...)
 #define rgb_light_disable(...)
 #endif // SL_SIMPLE_RGB_ENABLE_PORT && SL_SIMPLE_RGB_ENABLE_PIN
-
+#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
+static void _request_em1(bool allow_em1_only);
+#endif // SL_CATALOG_POWER_MANAGER_PRESENT
 
 /**
  * @brief Initialize the RGB LED
@@ -128,11 +133,14 @@ void handle_sleep_requirements()
                  || ( (red + green + blue) < (3*PWM_SLEEP_THRESHOLD) );
   if ( need_em1 ) {
     // request EM1
-    if ( !(rgbState.isPowerManagementRequested) ) sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
+    if ( !(rgbState.isPowerManagementRequested) ) _request_em1(true);
   } else {
     // may allow EM2
-    if ( rgbState.isPowerManagementRequested ) sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
+    if ( rgbState.isPowerManagementRequested ) _request_em1(false);
   }
+#if (!defined(SL_CATALOG_POWER_MANAGER_NO_DEEPSLEEP_PRESENT) && (SL_POWER_MANAGER_DEBUG == 1))
+  sl_power_manager_debug_print_em_requirements();
+#endif // NO_DEEP_SLEEP && PM_DEBUG
 #endif // SL_CATALOG_POWER_MANAGER_PRESENT
 }
 
@@ -166,3 +174,18 @@ void rgb_light_disable(void)
 }
 
 #endif // SL_SIMPLE_RGB_ENABLE_PORT && SL_SIMPLE_RGB_ENABLE_PIN
+
+#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
+static void _request_em1(bool allow_em1_only)
+{
+  if ( allow_em1_only ) {
+    sl_zigbee_app_debug_println("Requesting EM1 only");
+    sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
+    rgbState.isPowerManagementRequested = true;
+  } else {
+    sl_zigbee_app_debug_println("Allowing EM2 sleep");
+    sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1);
+    rgbState.isPowerManagementRequested = false;
+  }
+}
+#endif // SL_CATALOG_POWER_MANAGER_PRESENT

@@ -24,6 +24,9 @@
 #endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
 #include "app/framework/util/af-main.h"
 #include "app_button_press.h"
+#if SL_POWER_MANAGER_DEBUG == 1
+#include "sl_power_manager_debug.h"
+#endif // SL_POWER_MANAGER_DEBUG == 1
 
 #include "app/framework/plugin/reporting/reporting.h"
 
@@ -86,6 +89,9 @@ void emberAfMainInitCallback(void)
   #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
   rz_led_blink_init();
   #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
+  #if SL_POWER_MANAGER_DEBUG == 1
+  sl_power_manager_debug_print_em_requirements();
+  #endif // SL_POWER_MANAGER_DEBUG == 1
 }
 
 /** @brief Start feedback.
