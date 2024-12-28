@@ -66,8 +66,8 @@ ENV POST_BUILD_EXE="/opt/commander/commander"
 
 RUN \
     git clone --depth 1 -b ${GECKO_SDK_VERSION} https://github.com/SiliconLabs/gecko_sdk.git /gecko_sdk \
+    && rm -rf /gecko_sdk/.git \
     && chmod 755 /gecko_sdk/protocol/zigbee/tool/image-builder/image-builder-linux
-
 
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
