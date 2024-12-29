@@ -12,7 +12,7 @@
 #include "sl_simple_rgb_pwm_led_rgb_led0_config.h"
 
 #ifndef PWM_SLEEP_THRESHOLD
-#define PWM_SLEEP_THRESHOLD 254
+#define PWM_SLEEP_THRESHOLD (SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION - 2)
 #endif //PWM_SLEEP_THRESHOLD
 #define MAX(a, b) (a > b) ? a : b
 #define RGB_LIGHT (&sl_simple_rgb_pwm_led_rgb_led0)
@@ -56,7 +56,19 @@ void rgb_light_init(void)
     GPIO_PinModeSet(gpioPortI, 2, gpioModePushPull, 1);
     GPIO_PinModeSet(gpioPortI, 3, gpioModePushPull, 1);
     #endif // SL_SIMPLE_RGB_ENABLE_PORT && SL_SIMPLE_RGB_ENABLE_PIN
-    rgb_light_set_rgbcolor(PWM_SLEEP_THRESHOLD, PWM_SLEEP_THRESHOLD, PWM_SLEEP_THRESHOLD);
+    rgb_light_set_rgbcolor(
+        SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION-1,
+        SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION-1,
+        SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION-1
+    );
+}
+
+static void print_led_state()
+{
+  uint16_t r, g, b;
+  sl_led_get_rgb_color(RGB_LIGHT, &r, &g, &b);
+  sl_zigbee_app_debug_println("Current RGB light state: %02x/%02x/%02x, On/Off: %02x",
+        r, g, b, sl_led_get_state( (const sl_led_t*) RGB_LIGHT ) );
 }
 
 /**
@@ -68,6 +80,7 @@ void rgb_light_turnon()
   rgb_light_enable();
   sl_led_turn_on((const sl_led_t*) RGB_LIGHT);
   handle_sleep_requirements();
+  print_led_state();
 }
 
 /**
@@ -79,6 +92,7 @@ void rgb_light_turnoff()
   sl_led_turn_off((const sl_led_t*) RGB_LIGHT);
   handle_sleep_requirements();
   rgb_light_disable();
+  print_led_state();
 }
 
 /**
@@ -90,6 +104,9 @@ void rgb_light_turnoff()
 void rgb_light_set_rgbcolor(uint16_t red, uint16_t green, uint16_t blue)
 {
     sl_led_set_rgb_color(RGB_LIGHT, red, green, blue);
+    if ( SL_LED_CURRENT_STATE_OFF == sl_led_get_state( (const sl_led_t*) RGB_LIGHT ) ) {
+      sl_led_turn_off( (const sl_led_t*) RGB_LIGHT );
+    }
     handle_sleep_requirements();
 }
 
@@ -116,9 +133,8 @@ void rgb_light_set_brightness(uint8_t brightness)
   blue = blue * brightness / rgbState.targetLevel;
   sl_zigbee_app_debug_print("to %d ", blue);
 
-  sl_led_set_rgb_color(RGB_LIGHT, red, green, blue);
+  rgb_light_set_rgbcolor(red, green, blue);
   rgbState.targetLevel = MAX(brightness, 1);
-  handle_sleep_requirements();
 }
 
 /**
@@ -129,8 +145,10 @@ void handle_sleep_requirements()
 #ifdef SL_CATALOG_POWER_MANAGER_PRESENT
   uint16_t red, green, blue;
   sl_led_get_rgb_color(RGB_LIGHT, &red, &green, &blue);
-  bool need_em1 = ( 0 != red + green + blue)
-                 || ( (red + green + blue) < (3*PWM_SLEEP_THRESHOLD) );
+  bool need_em1 = 
+      ( SL_LED_CURRENT_STATE_OFF != sl_led_get_state( (const sl_led_t*) RGB_LIGHT ) )
+      && ( (red + green + blue) < (3*PWM_SLEEP_THRESHOLD) );
+
   if ( need_em1 ) {
     // request EM1
     if ( !(rgbState.isPowerManagementRequested) ) _request_em1(true);
