@@ -288,7 +288,7 @@ static sl_led_pwm_t* _rgb_channel_to_context( const sl_simple_rgb_pwm_led_contex
       break;
 
     case CH_BLUE:
-      return context->red;
+      return context->blue;
       break;
 
     default:
