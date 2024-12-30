@@ -150,6 +150,9 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
                                         uint8_t size,
                                         uint8_t* value)
 {
+  sl_zigbee_app_debug_println("%d Post attribute change on %d ep, cluster: %d, attribute id: %d, value: %d",
+      TIMESTAMP_MS, endpoint, clusterId, attributeId, (uint8_t) *(value)
+  );
   if (clusterId == ZCL_ON_OFF_CLUSTER_ID
       && attributeId == ZCL_ON_OFF_ATTRIBUTE_ID
       && mask == CLUSTER_MASK_SERVER) {
