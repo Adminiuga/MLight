@@ -31,7 +31,7 @@
 #include "sl_mx25_flash_shutdown.h"
 #endif // SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
 #include "app_button_press.h"
-#include "hw/rgb_light.h"
+#include "light/hw_light.h"
 
 #ifdef EMBER_TEST
 #define main nodeMain

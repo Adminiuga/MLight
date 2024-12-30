@@ -38,7 +38,7 @@
 #endif
 
 #include "app.h"
-#include "hw/rgb_light.h"
+#include "light/hw_light.h"
 
 #include "sl_dmp_ui_stub.h"
 
