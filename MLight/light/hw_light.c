@@ -32,11 +32,11 @@ static rgb_state_t rgbState = {
     
 // Forward declarations for static functions    
 #if defined(SL_SIMPLE_RGB_ENABLE_PORT) && defined(SL_SIMPLE_RGB_ENABLE_PIN)
-static void rgb_light_enable(void);
-static void rgb_light_disable(void);
+static void hw_light_enable(void);
+static void hw_light_disable(void);
 #else
-#define rgb_light_enable(...)
-#define rgb_light_disable(...)
+#define hw_light_enable(...)
+#define hw_light_disable(...)
 #endif // SL_SIMPLE_RGB_ENABLE_PORT && SL_SIMPLE_RGB_ENABLE_PIN
 #ifdef SL_CATALOG_POWER_MANAGER_PRESENT
 static bool _needs_em1();
@@ -47,18 +47,18 @@ static sl_led_pwm_t* _rgb_channel_to_context( const sl_simple_rgb_pwm_led_contex
 /**
  * @brief Initialize the RGB LED
  */
-void rgb_light_init(void)
+void hw_light_init(void)
 {
     #if defined(SL_SIMPLE_RGB_ENABLE_PORT) && defined(SL_SIMPLE_RGB_ENABLE_PIN)
     GPIO_PinModeSet(SL_SIMPLE_RGB_ENABLE_PORT, SL_SIMPLE_RGB_ENABLE_PIN, gpioModePushPull, 0);
-    rgb_light_disable();
+    hw_light_disable();
     // for thunderboard sense 2 enable each of the RGB LEDs
     GPIO_PinModeSet(gpioPortI, 0, gpioModePushPull, 1);
     GPIO_PinModeSet(gpioPortI, 1, gpioModePushPull, 1);
     GPIO_PinModeSet(gpioPortI, 2, gpioModePushPull, 1);
     GPIO_PinModeSet(gpioPortI, 3, gpioModePushPull, 1);
     #endif // SL_SIMPLE_RGB_ENABLE_PORT && SL_SIMPLE_RGB_ENABLE_PIN
-    rgb_light_set_rgbcolor(
+    hw_light_set_rgbcolor(
         SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION-1,
         SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION-1,
         SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION-1
@@ -76,10 +76,10 @@ static void print_led_state()
 /**
  * @brief Turn on the RGB LED
  */
-void rgb_light_turnon()
+void hw_light_turnon()
 {
   sl_zigbee_app_debug_println("Turning on RGB light");
-  rgb_light_enable();
+  hw_light_enable();
   sl_led_turn_on((const sl_led_t*) RGB_LIGHT);
   handle_sleep_requirements();
   print_led_state();
@@ -88,12 +88,12 @@ void rgb_light_turnon()
 /**
  * @brief Turn off the RGB LED
  */
-void rgb_light_turnoff()
+void hw_light_turnoff()
 {
   sl_zigbee_app_debug_println("Turning off RGB light");
   sl_led_turn_off((const sl_led_t*) RGB_LIGHT);
   handle_sleep_requirements();
-  rgb_light_disable();
+  hw_light_disable();
   print_led_state();
 }
 
@@ -103,7 +103,7 @@ void rgb_light_turnoff()
  * @param green Green color value [0-255]
  * @param blue Blue color value [0-255]
  */
-void rgb_light_set_rgbcolor(uint16_t red, uint16_t green, uint16_t blue)
+void hw_light_set_rgbcolor(uint16_t red, uint16_t green, uint16_t blue)
 {
     sl_led_set_rgb_color(RGB_LIGHT, red, green, blue);
     if ( SL_LED_CURRENT_STATE_OFF == sl_led_get_state( (const sl_led_t*) RGB_LIGHT ) ) {
@@ -116,7 +116,7 @@ void rgb_light_set_rgbcolor(uint16_t red, uint16_t green, uint16_t blue)
  * @brief Set the brightness of the RGB LED recalculated each of the channels
  * @param brightness Brightness value [0-255]
  */
-void rgb_light_set_brightness(uint8_t brightness)
+void hw_light_set_brightness(uint8_t brightness)
 {
   uint16_t red, green, blue;
   sl_zigbee_app_debug_print("Setting brightness from %d to %d", rgbState.targetLevel, brightness);
@@ -135,7 +135,7 @@ void rgb_light_set_brightness(uint8_t brightness)
   blue = blue * brightness / rgbState.targetLevel;
   sl_zigbee_app_debug_print("to %d ", blue);
 
-  rgb_light_set_rgbcolor(red, green, blue);
+  hw_light_set_rgbcolor(red, green, blue);
   rgbState.targetLevel = MAX(brightness, 1);
 }
 
@@ -147,7 +147,7 @@ void rgb_light_set_brightness(uint8_t brightness)
  *            - SL_STATUS_OK   Success
  *            - SL_STATUS_FAIL Error
  */
-sl_status_t rgb_light_turn_off_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch_name)
+sl_status_t hw_light_turn_off_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch_name)
 {
   sl_simple_rgb_pwm_led_context_t *context = led_handle->led_common.context;
   sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
@@ -167,7 +167,7 @@ sl_status_t rgb_light_turn_off_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_c
  *            - SL_STATUS_OK   Success
  *            - SL_STATUS_FAIL Error
  */
-sl_status_t rgb_light_turn_on_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch_name)
+sl_status_t hw_light_turn_on_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch_name)
 {
   sl_simple_rgb_pwm_led_context_t *context = led_handle->led_common.context;
   sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
@@ -202,7 +202,7 @@ void handle_sleep_requirements()
 /**
  * @brief Get the current brightness of the RGB LED
  */
-uint8_t rgb_light_get_brightness()
+uint8_t hw_light_get_brightness()
 {
     return rgbState.targetLevel;
 }
@@ -214,7 +214,7 @@ uint8_t rgb_light_get_brightness()
 /**
  * @brief enable the RGB LED driver (applicable to Thunberboard Sense 2)
  */
-void rgb_light_enable(void)
+void hw_light_enable(void)
 {
     GPIO_PinOutSet(SL_SIMPLE_RGB_ENABLE_PORT, SL_SIMPLE_RGB_ENABLE_PIN);
 }
@@ -223,7 +223,7 @@ void rgb_light_enable(void)
 /**
  * @brief disable the RGB LED driver (applicable to Thunberboard Sense 2)
  */
-void rgb_light_disable(void)
+void hw_light_disable(void)
 {
     GPIO_PinOutClear(SL_SIMPLE_RGB_ENABLE_PORT, SL_SIMPLE_RGB_ENABLE_PIN);
 }

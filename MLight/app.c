@@ -164,12 +164,12 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
 
     if (status == EMBER_ZCL_STATUS_SUCCESS) {
       if (data == 0x00) {
-        rgb_light_turnoff();
+        hw_light_turnoff();
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_OFF);
 #endif
       } else {
-        rgb_light_turnon();
+        hw_light_turnon();
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_ON);
 #endif

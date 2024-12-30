@@ -40,7 +40,7 @@
 void app_init(void)
 {
   app_button_press_enable();
-  rgb_light_init();
+  hw_light_init();
   #ifdef SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
   void sl_mx25_flash_shutdown();
   #endif // SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
