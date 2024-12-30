@@ -50,6 +50,8 @@ component:
   - id: zigbee_identify
   - id: zigbee_on_off
   - id: zigbee_zll_on_off_server
+  - id: zigbee_level_control
+  - id: zigbee_color_control_server
   - id: zigbee_counters
   - id: zigbee_find_and_bind_target
   - id: zigbee_interpan
@@ -200,6 +202,8 @@ source:
   - path: mods/device-nwk-join-control.c
   - path: light/hw_light.h
   - path: light/hw_light.c
+  - path: light/logical_light.h
+  - path: light/logical_light.c
 
 config_file:
   - path: config/zcl/zcl_config.zap
