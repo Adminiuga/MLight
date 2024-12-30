@@ -39,8 +39,10 @@ static void rgb_light_disable(void);
 #define rgb_light_disable(...)
 #endif // SL_SIMPLE_RGB_ENABLE_PORT && SL_SIMPLE_RGB_ENABLE_PIN
 #ifdef SL_CATALOG_POWER_MANAGER_PRESENT
+static bool _needs_em1();
 static void _request_em1(bool allow_em1_only);
 #endif // SL_CATALOG_POWER_MANAGER_PRESENT
+static sl_led_pwm_t* _rgb_channel_to_context( const sl_simple_rgb_pwm_led_context_t *context, enum RGB_channel_name_t ch_name );
 
 /**
  * @brief Initialize the RGB LED
@@ -138,18 +140,53 @@ void rgb_light_set_brightness(uint8_t brightness)
 }
 
 /**
+ * @brief Turn on specific channel of the RGB led
+ * @param[in] led_handle -- * rgb pwm led instance
+ * @param[in] ch_name -- channel name
+ * @return    Status Code:
+ *            - SL_STATUS_OK   Success
+ *            - SL_STATUS_FAIL Error
+ */
+sl_status_t rgb_light_turn_off_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch_name)
+{
+  sl_simple_rgb_pwm_led_context_t *context = led_handle->led_common.context;
+  sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
+  if ( NULL == ch ) return SL_STATUS_FAIL;
+
+  sl_pwm_led_stop( ch );
+  ch->state = SL_LED_CURRENT_STATE_OFF;
+  context->state = SL_LED_CURRENT_STATE_OFF;
+  return SL_STATUS_OK;
+}
+
+/**
+ * @brief Turn off specific channel of the RGB led
+ * @param[in] led_handle -- * rgb pwm led instance
+ * @param[in] ch -- channel name
+ * @return    Status Code:
+ *            - SL_STATUS_OK   Success
+ *            - SL_STATUS_FAIL Error
+ */
+sl_status_t rgb_light_turn_on_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch_name)
+{
+  sl_simple_rgb_pwm_led_context_t *context = led_handle->led_common.context;
+  sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
+  if ( NULL == ch ) return SL_STATUS_FAIL;
+
+  sl_pwm_led_start( ch );
+  ch->state = SL_LED_CURRENT_STATE_ON;
+  context->state = SL_LED_CURRENT_STATE_ON;
+  return SL_STATUS_OK;
+}
+
+/**
  * @brief request proper maximum sleep levels, depending if PWM is being in use
  */
 void handle_sleep_requirements()
 {
 #ifdef SL_CATALOG_POWER_MANAGER_PRESENT
-  uint16_t red, green, blue;
-  sl_led_get_rgb_color(RGB_LIGHT, &red, &green, &blue);
-  bool need_em1 = 
-      ( SL_LED_CURRENT_STATE_OFF != sl_led_get_state( (const sl_led_t*) RGB_LIGHT ) )
-      && ( (red + green + blue) < (3*PWM_SLEEP_THRESHOLD) );
 
-  if ( need_em1 ) {
+  if ( _needs_em1() ) {
     // request EM1
     if ( !(rgbState.isPowerManagementRequested) ) _request_em1(true);
   } else {
@@ -194,6 +231,20 @@ void rgb_light_disable(void)
 #endif // SL_SIMPLE_RGB_ENABLE_PORT && SL_SIMPLE_RGB_ENABLE_PIN
 
 #ifdef SL_CATALOG_POWER_MANAGER_PRESENT
+static bool _needs_em1()
+{
+  sl_simple_rgb_pwm_led_context_t *ctx = RGB_LIGHT->led_common.context;
+  uint16_t red, green, blue;
+  sl_simple_rgb_pwm_led_get_color(ctx, &red, &green, &blue);
+  
+  bool combined_rgb_needs_em1 = ( PWM_SLEEP_THRESHOLD * 3 > (red + green + blue) );
+
+  return ( combined_rgb_needs_em1 && ( SL_LED_CURRENT_STATE_ON == ctx->state ) ) // RGB Light is on and some of the channels need EM1
+         || ( (red < PWM_SLEEP_THRESHOLD) && (SL_LED_CURRENT_STATE_ON == ctx->red->state) )
+         || ( (green < PWM_SLEEP_THRESHOLD) && (SL_LED_CURRENT_STATE_ON == ctx->green->state) )
+         || ( (blue < PWM_SLEEP_THRESHOLD) && (SL_LED_CURRENT_STATE_ON == ctx->blue->state) );
+}
+
 static void _request_em1(bool allow_em1_only)
 {
   if ( allow_em1_only ) {
@@ -207,3 +258,29 @@ static void _request_em1(bool allow_em1_only)
   }
 }
 #endif // SL_CATALOG_POWER_MANAGER_PRESENT
+
+/**
+ * @brief get PWM Led channel from RGB instance based on channel name
+ * @param[in] context RWB PWM Context
+ * @param[in] ch_name channel name
+ * @return sl_led_pwm pointer
+ */
+static sl_led_pwm_t* _rgb_channel_to_context( const sl_simple_rgb_pwm_led_context_t *context, enum RGB_channel_name_t ch_name )
+{
+  switch ( ch_name ) {
+    case CH_RED:
+      return context->red;
+      break;
+
+    case CH_GREEN:
+      return context->green;
+      break;
+
+    case CH_BLUE:
+      return context->red;
+      break;
+
+    default:
+      return NULL;
+  }
+}
