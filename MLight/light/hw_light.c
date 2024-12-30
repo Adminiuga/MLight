@@ -139,6 +139,17 @@ void hw_light_set_brightness(uint8_t brightness)
   rgbState.targetLevel = MAX(brightness, 1);
 }
 
+sl_status_t hw_light_set_level_ch(enum RGB_channel_name_t ch_name, uint16_t level)
+{
+  sl_simple_rgb_pwm_led_context_t *context = RGB_LIGHT->led_common.context;
+  sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
+  if ( NULL == ch ) return SL_STATUS_FAIL;
+
+  sl_pwm_led_set_color(ch, level);
+  if ( SL_LED_CURRENT_STATE_OFF == ch->state) sl_pwm_led_stop( ch );
+  return SL_STATUS_OK;
+}
+
 /**
  * @brief Turn on specific channel of the RGB led
  * @param[in] led_handle -- * rgb pwm led instance
@@ -147,9 +158,9 @@ void hw_light_set_brightness(uint8_t brightness)
  *            - SL_STATUS_OK   Success
  *            - SL_STATUS_FAIL Error
  */
-sl_status_t hw_light_turn_off_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch_name)
+sl_status_t hw_light_turn_off_ch(enum RGB_channel_name_t ch_name)
 {
-  sl_simple_rgb_pwm_led_context_t *context = led_handle->led_common.context;
+  sl_simple_rgb_pwm_led_context_t *context = RGB_LIGHT->led_common.context;
   sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
   if ( NULL == ch ) return SL_STATUS_FAIL;
 
@@ -167,9 +178,9 @@ sl_status_t hw_light_turn_off_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_ch
  *            - SL_STATUS_OK   Success
  *            - SL_STATUS_FAIL Error
  */
-sl_status_t hw_light_turn_on_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch_name)
+sl_status_t hw_light_turn_on_ch(enum RGB_channel_name_t ch_name)
 {
-  sl_simple_rgb_pwm_led_context_t *context = led_handle->led_common.context;
+  sl_simple_rgb_pwm_led_context_t *context = RGB_LIGHT->led_common.context;
   sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
   if ( NULL == ch ) return SL_STATUS_FAIL;
 

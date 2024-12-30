@@ -16,8 +16,9 @@ void hw_light_turnon();
 void hw_light_turnoff();
 void hw_light_set_rgbcolor(uint16_t red, uint16_t green, uint16_t blue);
 void hw_light_set_brightness(uint8_t brightness);
-sl_status_t hw_light_turn_on_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch);
-sl_status_t hw_light_turn_off_ch(const sl_led_rgb_pwm_t *led_handle, enum RGB_channel_name_t ch);
+sl_status_t hw_light_turn_on_ch(enum RGB_channel_name_t ch_name);
+sl_status_t hw_light_turn_off_ch(enum RGB_channel_name_t ch_name);
+sl_status_t hw_light_set_level_ch(enum RGB_channel_name_t ch_name, uint16_t color);
 
 /**
  * @brief request proper maximum sleep levels, depending if PWM is being in use
