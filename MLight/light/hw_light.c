@@ -248,12 +248,9 @@ static bool _needs_em1()
   uint16_t red, green, blue;
   sl_simple_rgb_pwm_led_get_color(ctx, &red, &green, &blue);
   
-  bool combined_rgb_needs_em1 = ( PWM_SLEEP_THRESHOLD * 3 > (red + green + blue) );
-
-  return ( combined_rgb_needs_em1 && ( SL_LED_CURRENT_STATE_ON == ctx->state ) ) // RGB Light is on and some of the channels need EM1
-         || ( (red < PWM_SLEEP_THRESHOLD) && (SL_LED_CURRENT_STATE_ON == ctx->red->state) )
-         || ( (green < PWM_SLEEP_THRESHOLD) && (SL_LED_CURRENT_STATE_ON == ctx->green->state) )
-         || ( (blue < PWM_SLEEP_THRESHOLD) && (SL_LED_CURRENT_STATE_ON == ctx->blue->state) );
+  return ( red && (red < PWM_SLEEP_THRESHOLD) && (SL_LED_CURRENT_STATE_ON == ctx->red->state) )
+         || ( green && (green < PWM_SLEEP_THRESHOLD) && (SL_LED_CURRENT_STATE_ON == ctx->green->state) )
+         || ( blue && (blue < PWM_SLEEP_THRESHOLD) && (SL_LED_CURRENT_STATE_ON == ctx->blue->state) );
 }
 
 static void _request_em1(bool allow_em1_only)
