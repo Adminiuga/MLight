@@ -150,6 +150,7 @@ sl_status_t hw_light_set_level_ch(enum RGB_channel_name_t ch_name, uint16_t leve
   if ( level == SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION - 2) level = SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION - 1;
   sl_pwm_led_set_color( ch, level );
   if ( SL_LED_CURRENT_STATE_OFF == ch->state ) sl_pwm_led_stop( ch );
+  handle_sleep_requirements();
   return SL_STATUS_OK;
 }
 
@@ -200,6 +201,7 @@ sl_status_t hw_light_turn_ch_onoff(enum RGB_channel_name_t ch_name, bool turn_on
     ch->state = SL_LED_CURRENT_STATE_OFF;
     context->state = SL_LED_CURRENT_STATE_OFF;
   }
+  handle_sleep_requirements();
   return SL_STATUS_OK;
 }
 
