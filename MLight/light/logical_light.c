@@ -27,9 +27,17 @@ typedef struct {
     uint8_t level;
 } cluster_init_counter_t;
 
-cluster_init_counter_t _post_init_counter = {
-    .on_off = CLUSTERS_TO_INIT_ON_OFF,
-    .level = CLUSTERS_TO_INIT_LEVEL
+typedef struct {
+    cluster_init_counter_t init_counters;
+    bool inhibit_updates;
+} Llight_state_t;
+
+static Llight_state_t _state = {
+    .init_counters = {
+        .on_off = CLUSTERS_TO_INIT_ON_OFF,
+        .level = CLUSTERS_TO_INIT_LEVEL
+    },
+    .inhibit_updates = true
 };
 
 
@@ -42,15 +50,15 @@ static sl_status_t _sync_light_channel(uint8_t endpoint, enum RGB_channel_name_t
 // Callback implementations
 void emberAfPluginOnOffClusterServerPostInitCallback(uint8_t endpoint)
 {
-    emberAfOnOffClusterPrintln("%d: Cluster post init - OnOff on %d ep, count: %d", TIMESTAMP_MS, endpoint, _post_init_counter.on_off);
-    if ( _post_init_counter.on_off ) _post_init_counter.on_off--;
+    emberAfOnOffClusterPrintln("%d: Cluster post init - OnOff on %d ep, count: %d", TIMESTAMP_MS, endpoint, _state.init_counters.on_off);
+    if ( _state.init_counters.on_off ) _state.init_counters.on_off--;
     _sync_hardware_state();
 }
 
 void emberAfPluginLevelControlClusterServerPostInitCallback(uint8_t endpoint)
 {
-    emberAfOnOffClusterPrintln("%d: Cluster post init - Level on %d ep, count: %d", TIMESTAMP_MS, endpoint, _post_init_counter.level);
-    if ( _post_init_counter.level ) _post_init_counter.level--;
+    emberAfOnOffClusterPrintln("%d: Cluster post init - Level on %d ep, count: %d", TIMESTAMP_MS, endpoint, _state.init_counters.level);
+    if ( _state.init_counters.level ) _state.init_counters.level--;
     _sync_hardware_state();
 }
 
@@ -181,7 +189,7 @@ static sl_status_t _sync_light_channel(uint8_t endpoint, enum RGB_channel_name_t
  */
 static void _sync_hardware_state(void)
 {
-    if ( _post_init_counter.on_off || _post_init_counter.level ) {
+    if ( _state.init_counters.on_off || _state.init_counters.level ) {
         sl_zigbee_app_debug_println("%d: Light is not yet fully initialized", TIMESTAMP_MS);
         return;
     }
@@ -192,4 +200,5 @@ static void _sync_hardware_state(void)
     _sync_light_channel( EP_BLUE_CHANNEL, CH_BLUE );
 
     llight_sync_channel_light_to_color();
+    _state.inhibit_updates = true;
 }
