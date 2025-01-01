@@ -156,23 +156,13 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
   if (clusterId == ZCL_ON_OFF_CLUSTER_ID
       && attributeId == ZCL_ON_OFF_ATTRIBUTE_ID
       && mask == CLUSTER_MASK_SERVER) {
-    uint8_t data;
-    EmberStatus status = emberAfReadAttribute(endpoint,
-                                              ZCL_ON_OFF_CLUSTER_ID,
-                                              ZCL_ON_OFF_ATTRIBUTE_ID,
-                                              CLUSTER_MASK_SERVER,
-                                              (int8u*) &data,
-                                              sizeof(data),
-                                              NULL);
-
-    if (status == EMBER_ZCL_STATUS_SUCCESS) {
-      if (data == 0x00) {
-        hw_light_turnoff();
+    if (value[0] == 0x00) {
+        llight_turnoff_light(endpoint);
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_OFF);
 #endif
       } else {
-        hw_light_turnon();
+        llight_turnon_light(endpoint);
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_ON);
 #endif
@@ -187,7 +177,6 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
 #endif
       }
       sl_dmp_ui_set_light_direction(DMP_UI_DIRECTION_INVALID);
-    }
   }
 }
 
