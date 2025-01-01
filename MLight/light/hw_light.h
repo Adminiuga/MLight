@@ -18,6 +18,7 @@ void hw_light_set_rgbcolor(uint16_t red, uint16_t green, uint16_t blue);
 void hw_light_set_brightness(uint8_t brightness);
 sl_status_t hw_light_turn_on_ch(enum RGB_channel_name_t ch_name);
 sl_status_t hw_light_turn_off_ch(enum RGB_channel_name_t ch_name);
+sl_status_t hw_light_turn_ch_onoff(enum RGB_channel_name_t ch_name, bool turn_on);
 sl_status_t hw_light_set_level_ch(enum RGB_channel_name_t ch_name, uint16_t color);
 
 /**
