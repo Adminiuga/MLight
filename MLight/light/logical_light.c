@@ -118,6 +118,38 @@ sl_status_t llight_turnoff_light(uint8_t endpoint)
     return status;
 }
 
+
+/**
+ * @brief set level for the light
+ */
+sl_status_t llight_set_level(uint8_t endpoint, uint8_t level)
+{
+    if ( _state.external_updates_disabled ) return SL_STATUS_OK;
+    llight_disable_external_updates();
+
+    sl_status_t status = SL_STATUS_FAIL;
+
+    switch ( endpoint ) {
+        case EP_RED_CHANNEL:
+            status = hw_light_set_level_ch( CH_RED, level );
+            _sync_channel_light_to_color();
+
+        case EP_GREEN_CHANNEL:
+            status = hw_light_set_level_ch( CH_GREEN, level );
+            _sync_channel_light_to_color();
+
+        case EP_BLUE_CHANNEL:
+            status = hw_light_set_level_ch( CH_BLUE, level );
+            _sync_channel_light_to_color();
+
+        default:
+            break;
+    }
+
+    llight_enable_external_updates();
+    return status;
+}
+
 // *****************************
 // internal method implementations
 // -----------------------------
@@ -268,6 +300,9 @@ static sl_status_t _sync_channel_light_to_color(void)
     }
 
     bool color_on_off = ( (r_onoff && r_lvl) || (g_onoff && g_lvl) || (b_onoff && b_lvl) );
+
+    // until we handle levels
+    color_on_off = ( r_onoff || g_onoff || b_onoff );
     if ( EMBER_ZCL_STATUS_SUCCESS != emberAfWriteServerAttribute(
         EP_RGB_LIGHT,
         ZCL_ON_OFF_CLUSTER_ID,

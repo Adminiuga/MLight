@@ -153,9 +153,10 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
   sl_zigbee_app_debug_println("%d Post attribute change on %d ep, cluster: %d, attribute id: %d, value: %d",
       TIMESTAMP_MS, endpoint, clusterId, attributeId, (uint8_t) *(value)
   );
+  if ( mask != CLUSTER_MASK_SERVER ) return; // we only process server attributes
+
   if (clusterId == ZCL_ON_OFF_CLUSTER_ID
-      && attributeId == ZCL_ON_OFF_ATTRIBUTE_ID
-      && mask == CLUSTER_MASK_SERVER) {
+      && attributeId == ZCL_ON_OFF_ATTRIBUTE_ID) {
     if (value[0] == 0x00) {
         llight_turnoff_light(endpoint);
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
@@ -177,6 +178,9 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
 #endif
       }
       sl_dmp_ui_set_light_direction(DMP_UI_DIRECTION_INVALID);
+  } else ( clusterId == ZCL_LEVEL_CONTROL_CLUSTER_ID
+         && attributeId == ZCL_CURRENT_LEVEL_ATTRIBUTE_ID ) {
+    llight_set_level( endpoint, buffer[0] ); 
   }
 }
 

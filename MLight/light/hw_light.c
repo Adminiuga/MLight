@@ -61,7 +61,7 @@ void hw_light_init(void)
     hw_light_set_rgbcolor(
         SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION-1,
         SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION-1,
-        SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION-1
+        SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION >> 1
     );
 }
 
