@@ -143,6 +143,24 @@ sl_status_t hw_light_set_brightness(uint8_t brightness)
 
 sl_status_t hw_light_set_level_ch(enum RGB_channel_name_t ch_name, uint16_t level)
 {
+  sl_simple_rgb_pwm_led_context_t *context = RGB_LIGHT->led_common.context;
+  sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
+  if ( NULL == ch ) return SL_STATUS_FAIL;
+
+  sl_pwm_led_set_color( ch, level );
+  if ( SL_LED_CURRENT_STATE_OFF == ch->state ) sl_pwm_led_stop( ch );
+  return SL_STATUS_OK;
+}
+
+/**
+ * @brief Turn off specific channel of the RGB led
+ * @param[in] ch -- channel name
+ * @return    Status Code:
+ *            - SL_STATUS_OK   Success
+ *            - SL_STATUS_FAIL Error
+ */
+sl_status_t hw_light_turn_on_ch(enum RGB_channel_name_t ch_name)
+{
   return hw_light_turn_ch_onoff( ch_name, true );
 }
 
@@ -181,26 +199,6 @@ sl_status_t hw_light_turn_ch_onoff(enum RGB_channel_name_t ch_name, bool turn_on
     ch->state = SL_LED_CURRENT_STATE_OFF;
     context->state = SL_LED_CURRENT_STATE_OFF;
   }
-  return SL_STATUS_OK;
-}
-
-/**
- * @brief Turn off specific channel of the RGB led
- * @param[in] led_handle -- * rgb pwm led instance
- * @param[in] ch -- channel name
- * @return    Status Code:
- *            - SL_STATUS_OK   Success
- *            - SL_STATUS_FAIL Error
- */
-sl_status_t hw_light_turn_on_ch(enum RGB_channel_name_t ch_name)
-{
-  sl_simple_rgb_pwm_led_context_t *context = RGB_LIGHT->led_common.context;
-  sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
-  if ( NULL == ch ) return SL_STATUS_FAIL;
-
-  sl_pwm_led_start( ch );
-  ch->state = SL_LED_CURRENT_STATE_ON;
-  context->state = SL_LED_CURRENT_STATE_ON;
   return SL_STATUS_OK;
 }
 
