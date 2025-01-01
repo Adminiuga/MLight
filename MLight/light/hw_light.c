@@ -116,7 +116,7 @@ void hw_light_set_rgbcolor(uint16_t red, uint16_t green, uint16_t blue)
  * @brief Set the brightness of the RGB LED recalculated each of the channels
  * @param brightness Brightness value [0-255]
  */
-void hw_light_set_brightness(uint8_t brightness)
+sl_status_t hw_light_set_brightness(uint8_t brightness)
 {
   uint16_t red, green, blue;
   sl_zigbee_app_debug_print("Setting brightness from %d to %d", rgbState.targetLevel, brightness);
@@ -137,6 +137,8 @@ void hw_light_set_brightness(uint8_t brightness)
 
   hw_light_set_rgbcolor(red, green, blue);
   rgbState.targetLevel = MAX(brightness, 1);
+
+  return SL_STATUS_OK;
 }
 
 sl_status_t hw_light_set_level_ch(enum RGB_channel_name_t ch_name, uint16_t level)

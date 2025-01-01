@@ -38,7 +38,7 @@
 #endif
 
 #include "app.h"
-#include "light/hw_light.h"
+#include "light/logical_light.h"
 
 #include "sl_dmp_ui_stub.h"
 
@@ -178,9 +178,9 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
 #endif
       }
       sl_dmp_ui_set_light_direction(DMP_UI_DIRECTION_INVALID);
-  } else ( clusterId == ZCL_LEVEL_CONTROL_CLUSTER_ID
+  } else if ( clusterId == ZCL_LEVEL_CONTROL_CLUSTER_ID
          && attributeId == ZCL_CURRENT_LEVEL_ATTRIBUTE_ID ) {
-    llight_set_level( endpoint, buffer[0] ); 
+    llight_set_level( endpoint, value[0] );
   }
 }
 

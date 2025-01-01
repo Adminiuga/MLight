@@ -46,7 +46,8 @@ static Llight_state_t _state = {
 static void _sync_hardware_state(void);
 static sl_status_t _sync_light_channel(uint8_t endpoint, enum RGB_channel_name_t ch_name);
 static sl_status_t _sync_channel_light_to_color(void);
-static sl_status_t _sync_color_light_to_channels(void);
+static sl_status_t _sync_color_brightness_to_channels( uint8_t level );
+static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, uint8_t *blue);
 static sl_status_t _turn_onoff_light(uint8_t endpoint, bool turn_on);
 
 
@@ -133,14 +134,21 @@ sl_status_t llight_set_level(uint8_t endpoint, uint8_t level)
         case EP_RED_CHANNEL:
             status = hw_light_set_level_ch( CH_RED, level );
             _sync_channel_light_to_color();
+            break;
 
         case EP_GREEN_CHANNEL:
             status = hw_light_set_level_ch( CH_GREEN, level );
             _sync_channel_light_to_color();
+            break;
 
         case EP_BLUE_CHANNEL:
             status = hw_light_set_level_ch( CH_BLUE, level );
             _sync_channel_light_to_color();
+            break;
+
+        case EP_RGB_LIGHT:
+            status = _sync_color_brightness_to_channels( level );
+            break;
 
         default:
             break;
@@ -357,4 +365,100 @@ sl_status_t _turn_onoff_light(uint8_t endpoint, bool turn_on)
     }
 
     return state;
+}
+
+/**
+ * @brief recalculate RGB from XY, normalize to brighntess and update channels
+ */
+static sl_status_t _sync_color_brightness_to_channels(uint8_t endpoint)
+{
+    struct {
+        uint8_t ep;
+        enum RGB_channel_name_t chname;
+        uint8_t level;
+    } levels[] = {
+        {.ep = EP_RED_CHANNEL, .chname = CH_RED, },
+        {.ep = EP_GREEN_CHANNEL, .chname = CH_GREEN, },
+        {.ep = EP_BLUE_CHANNEL, .chname = CH_BLUE }
+    };
+
+    sl_status_t status;
+    status = _rgb_from_xy_and_brightness( &(levels[0].level), &(levels[1].level), &(levels[2].level) );
+    if ( SL_STATUS_OK != status ) return status;
+
+    for ( uint8_t i = 0; i < (sizeof( levels )/sizeof( levels[0] )); i++) {
+        status |= hw_light_set_level_ch( levels[i].chname, levels[i].level );
+        if ( EMBER_ZCL_STATUS_SUCCESS != emberAfWriteServerAttribute(
+            levels[i].ep, ZCL_LEVEL_CONTROL_CLUSTER_ID, ZCL_CURRENT_LEVEL_ATTRIBUTE_ID,
+            &(levels[i].level),
+            ZCL_INT8U_ATTRIBUTE_TYPE
+        )) status |= SL_STATUS_FAIL;
+    }
+
+    return status;
+}
+
+/**
+ * @brief calclulate rgb from X & Y color, normilized to current brightness
+ */
+static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, uint8_t *blue) {
+    uint16_t color_x, color_y;
+    uint8_t level;
+
+    if ( EMBER_ZCL_STATUS_SUCCESS != emberAfReadServerAttribute(
+            EP_RGB_LIGHT, ZCL_COLOR_CONTROL_CLUSTER_ID, ZCL_COLOR_CONTROL_CURRENT_X_ATTRIBUTE_ID,
+            &color_x, sizeof(color_x)
+    )) return SL_STATUS_FAIL;
+    if ( EMBER_ZCL_STATUS_SUCCESS != emberAfReadServerAttribute(
+            EP_RGB_LIGHT, ZCL_COLOR_CONTROL_CLUSTER_ID, ZCL_COLOR_CONTROL_CURRENT_Y_ATTRIBUTE_ID,
+            &color_y, sizeof(color_y)
+    )) return SL_STATUS_FAIL;
+    if ( EMBER_ZCL_STATUS_SUCCESS != emberAfReadServerAttribute(
+            EP_RGB_LIGHT, ZCL_LEVEL_CONTROL_CLUSTER_ID, ZCL_CURRENT_LEVEL_ATTRIBUTE_ID,
+            &level, sizeof(level)
+    )) return SL_STATUS_FAIL;
+
+    sl_zigbee_app_debug_println("Current x,y is (0x%x, 0x%x), level: %d", color_x, color_y, level);
+
+    float x = color_x / 65535.0f;
+    float y = color_y / 65535.0f;
+    float z = 1.0f - x - y;
+
+    float Y = ( 1.0f * level) / 255.0f ; // The reference white point luminance
+    sl_zigbee_app_debug_println("Current x,y is (%.5f, %.5x), luminance: %f", x, y, Y);
+    float X = (Y / y) * x;
+    float Z = (Y / y) * z;
+
+    float r_linear = X * 1.656492f - Y * 0.354851f - Z * 0.255038f;
+    float g_linear = -X * 0.707196f + Y * 1.655397f + Z * 0.036152f;
+    float b_linear = X * 0.051713f - Y * 0.121364f + Z * 1.011530f;
+
+    // Apply gamma correction to convert from linear to sRGB color space
+    float gamma = 2.4;
+    float a = 0.055;
+    float r = (r_linear <= 0.0031308f) ? 12.92f*r_linear : (1.0f+a)*pow(r_linear, 1.0/gamma) - a;
+    float g = (g_linear <= 0.0031308f) ? 12.92f*g_linear : (1.0f+a)*pow(g_linear, 1.0/gamma) - a;
+    float b = (b_linear <= 0.0031308f) ? 12.92f*b_linear : (1.0f+a)*pow(b_linear, 1.0/gamma) - a;
+
+    if (r < 0) {
+        r = 0;
+    } else if (r > 1) {
+        r = 1;
+    }
+    if (g < 0) {
+        g = 0;
+    } else if (g > 1) {
+        g = 1;
+    }
+    if (b < 0) {
+        b = 0;
+    } else if (b > 1) {
+        b = 1;
+    }
+
+    *red = (uint8_t) round( 255.0f * r );
+    *green = (uint8_t) round( 255.0f * g );
+    *blue = (uint8_t) round( 255.0f * b );
+
+    return SL_STATUS_OK;
 }
