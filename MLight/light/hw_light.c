@@ -147,6 +147,7 @@ sl_status_t hw_light_set_level_ch(enum RGB_channel_name_t ch_name, uint16_t leve
   sl_led_pwm_t *ch = _rgb_channel_to_context( context, ch_name );
   if ( NULL == ch ) return SL_STATUS_FAIL;
 
+  if ( level == SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION - 2) level = SL_SIMPLE_RGB_PWM_LED_RGB_LED0_RESOLUTION - 1;
   sl_pwm_led_set_color( ch, level );
   if ( SL_LED_CURRENT_STATE_OFF == ch->state ) sl_pwm_led_stop( ch );
   return SL_STATUS_OK;
