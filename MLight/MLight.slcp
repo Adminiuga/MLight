@@ -11,6 +11,9 @@ component:
   - id: cli
     instance:
       - example
+  - id: simple_rgb_pwm_led
+    instance:
+      - rgb_led0
   - id: iostream_recommended_stream
   - id: zigbee_debug_print
   - id: zigbee_pro_leaf_stack
@@ -47,6 +50,8 @@ component:
   - id: zigbee_identify
   - id: zigbee_on_off
   - id: zigbee_zll_on_off_server
+  - id: zigbee_level_control
+  - id: zigbee_color_control_server
   - id: zigbee_counters
   - id: zigbee_find_and_bind_target
   - id: zigbee_interpan
@@ -92,8 +97,26 @@ configuration:
     value: SLI_ZIGBEE_NETWORK_SECURITY_TYPE_3_0
   - name: SL_ZIGBEE_APP_FRAMEWORK_BACKOFF_SLEEP_MS
     value: 5
+  - name: EMBER_AF_PLUGIN_REPORTING_ENABLE_EXPANDED_TABLE
+    value: 1
+  - name: EMBER_AF_PLUGIN_REPORTING_EXPANDED_TABLE_SIZE
+    value: 64
+  - name: EMBER_BINDING_TABLE_SIZE
+    value: 8
   - name: SL_ZIGBEE_APP_FRAMEWORK_STAY_AWAKE_WHEN_NOT_JOINED
     value: 0
+  - name: EMBER_AF_PLUGIN_END_DEVICE_SUPPORT_SHORT_POLL_INTERVAL_SECONDS
+    value: 0.5f
+    condition:
+      - zigbee_end_device_support
+  - name: EMBER_AF_PLUGIN_END_DEVICE_SUPPORT_LONG_POLL_INTERVAL_SECONDS
+    value: 1
+    condition:
+      - zigbee_end_device_support
+  - name: EMBER_AF_PLUGIN_END_DEVICE_SUPPORT_WAKE_TIMEOUT_SECONDS
+    value: 1.5f
+    condition:
+      - zigbee_end_device_support
   - name: SL_IOSTREAM_USART_VCOM_RESTRICT_ENERGY_MODE_TO_ALLOW_RECEPTION
     value: 0
     condition:
@@ -153,6 +176,17 @@ configuration:
   - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
     value: 2286
     condition:
+      - mgm210la22jif
+      - zigbee_ota_client
+  - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
+    value: 2287
+    condition:
+      - efr32mg12p332f1024gl125
+      - zigbee_ota_client
+  - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
+    value: 2288
+    condition:
+      - brd4181b
       - zigbee_ota_client
   - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_FIRMWARE_VERSION
     value: 241226000
@@ -172,6 +206,10 @@ source:
   - path: app.c
   - path: mods/device-nwk-join-control.h
   - path: mods/device-nwk-join-control.c
+  - path: light/hw_light.h
+  - path: light/hw_light.c
+  - path: light/logical_light.h
+  - path: light/logical_light.c
 
 config_file:
   - path: config/zcl/zcl_config.zap
@@ -182,6 +220,14 @@ config_file:
       file_id: gatt_configuration_file_id
     path: config/gatt_configuration.btconf
     directory: btconf
+  - override:
+      component: simple_rgb_pwm_led
+      file_id: simple_rgb_pwm_led_config
+      instance: rgb_led0
+    condition:
+      - brd4181b
+      - simple_rgb_pwm_led
+    path: template/brd4181b/sl_simple_rgb_pwm_led_rgb_led0_config.h
 
 include:
   - path: ./

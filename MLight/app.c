@@ -24,6 +24,9 @@
 #endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
 #include "app/framework/util/af-main.h"
 #include "app_button_press.h"
+#if SL_POWER_MANAGER_DEBUG == 1
+#include "sl_power_manager_debug.h"
+#endif // SL_POWER_MANAGER_DEBUG == 1
 
 #include "app/framework/plugin/reporting/reporting.h"
 
@@ -35,6 +38,7 @@
 #endif
 
 #include "app.h"
+#include "light/logical_light.h"
 
 #include "sl_dmp_ui_stub.h"
 
@@ -85,6 +89,9 @@ void emberAfMainInitCallback(void)
   #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
   rz_led_blink_init();
   #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
+  #if SL_POWER_MANAGER_DEBUG == 1
+  sl_power_manager_debug_print_em_requirements();
+  #endif // SL_POWER_MANAGER_DEBUG == 1
 }
 
 /** @brief Start feedback.
@@ -143,34 +150,20 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
                                         uint8_t size,
                                         uint8_t* value)
 {
-  if (clusterId == ZCL_ON_OFF_CLUSTER_ID
-      && attributeId == ZCL_ON_OFF_ATTRIBUTE_ID
-      && mask == CLUSTER_MASK_SERVER) {
-    uint8_t data;
-    EmberStatus status = emberAfReadAttribute(endpoint,
-                                              ZCL_ON_OFF_CLUSTER_ID,
-                                              ZCL_ON_OFF_ATTRIBUTE_ID,
-                                              CLUSTER_MASK_SERVER,
-                                              (int8u*) &data,
-                                              sizeof(data),
-                                              NULL);
+  sl_zigbee_app_debug_println("%d Post attribute change on %d ep, cluster: %d, attribute id: %d, value: %d",
+      TIMESTAMP_MS, endpoint, clusterId, attributeId, (uint8_t) *(value)
+  );
+  if ( mask != CLUSTER_MASK_SERVER ) return; // we only process server attributes
 
-    if (status == EMBER_ZCL_STATUS_SUCCESS) {
-      if (data == 0x00) {
-        #if defined(SL_CATALOG_LED1_PRESENT)
-        led_turn_off(LED1);
-        #else
-        led_turn_off(LED0);
-        #endif // SL_CATALOG_LED1_PRESENT
+  if (clusterId == ZCL_ON_OFF_CLUSTER_ID
+      && attributeId == ZCL_ON_OFF_ATTRIBUTE_ID) {
+    if (value[0] == 0x00) {
+        llight_turnoff_light(endpoint);
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_OFF);
 #endif
       } else {
-        #if defined(SL_CATALOG_LED1_PRESENT)
-        led_turn_on(LED1);
-        #else
-        led_turn_on(LED0);
-        #endif // SL_CATALOG_LED1_PRESENT
+        llight_turnon_light(endpoint);
 #ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
         zb_ble_dmp_notify_light(DMP_UI_LIGHT_ON);
 #endif
@@ -185,7 +178,9 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
 #endif
       }
       sl_dmp_ui_set_light_direction(DMP_UI_DIRECTION_INVALID);
-    }
+  } else if ( clusterId == ZCL_LEVEL_CONTROL_CLUSTER_ID
+         && attributeId == ZCL_CURRENT_LEVEL_ATTRIBUTE_ID ) {
+    llight_set_level( endpoint, value[0] );
   }
 }
 
