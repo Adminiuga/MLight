@@ -71,6 +71,12 @@ static void print_led_state()
   sl_led_get_rgb_color(RGB_LIGHT, &r, &g, &b);
   sl_zigbee_app_debug_println("Current RGB light state: %02x/%02x/%02x, On/Off: %02x",
         r, g, b, sl_led_get_state( (const sl_led_t*) RGB_LIGHT ) );
+  const sl_simple_rgb_pwm_led_context_t *ctx = RGB_LIGHT->led_common.context;
+  sl_zigbee_app_debug_println("Current RGB light channels on_off: %02x/%02x/%02x",
+      (ctx->red->state),
+      (ctx->green->state),
+      (ctx->blue->state));
+      
 }
 
 /**
@@ -80,8 +86,9 @@ void hw_light_turnon()
 {
   sl_zigbee_app_debug_println("Turning on RGB light");
   hw_light_enable();
-  sl_led_turn_on((const sl_led_t*) RGB_LIGHT);
-  handle_sleep_requirements();
+  hw_light_turn_on_ch( CH_RED );
+  hw_light_turn_on_ch( CH_GREEN );
+  hw_light_turn_on_ch( CH_BLUE );
   print_led_state();
 }
 
@@ -91,8 +98,9 @@ void hw_light_turnon()
 void hw_light_turnoff()
 {
   sl_zigbee_app_debug_println("Turning off RGB light");
-  sl_led_turn_off((const sl_led_t*) RGB_LIGHT);
-  handle_sleep_requirements();
+  hw_light_turn_off_ch( CH_RED );
+  hw_light_turn_off_ch( CH_GREEN );
+  hw_light_turn_off_ch( CH_BLUE );
   hw_light_disable();
   print_led_state();
 }
