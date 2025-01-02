@@ -1,3 +1,4 @@
+#include <math.h>
 #include PLATFORM_HEADER
 #include "hal.h"
 #include "ember.h"
@@ -49,6 +50,7 @@ static sl_status_t _sync_channel_light_to_color(void);
 static sl_status_t _sync_color_brightness_to_channels( uint8_t level );
 static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, uint8_t *blue);
 static sl_status_t _turn_onoff_light(uint8_t endpoint, bool turn_on);
+static sl_status_t _update_xy_color_from_rgb(uint8_t red, uint8_t green, uint8_t blue);
 
 
 // Callback implementations
@@ -307,10 +309,9 @@ static sl_status_t _sync_channel_light_to_color(void)
             TIMESTAMP_MS, init[i].endpoint, init[i].ch_name, (uint8_t) *(init[i].onoff), (uint8_t) *(init[i].level));
     }
 
-    bool color_on_off = ( (r_onoff && r_lvl) || (g_onoff && g_lvl) || (b_onoff && b_lvl) );
+    _update_xy_color_from_rgb( r_lvl, g_lvl, b_lvl );
 
-    // until we handle levels
-    color_on_off = ( r_onoff || g_onoff || b_onoff );
+    bool color_on_off = r_onoff || g_onoff || b_onoff;
     if ( EMBER_ZCL_STATUS_SUCCESS != emberAfWriteServerAttribute(
         EP_RGB_LIGHT,
         ZCL_ON_OFF_CLUSTER_ID,
@@ -320,8 +321,6 @@ static sl_status_t _sync_channel_light_to_color(void)
     )) return SL_STATUS_FAIL;
 
     emberAfOnOffClusterPrintln("%d Setting color on_off to %d", TIMESTAMP_MS, color_on_off);
-    // ToDo
-    // calculate color from RGB of individual channels
 
     return SL_STATUS_OK;
 }
@@ -407,11 +406,11 @@ static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, u
 
     if ( EMBER_ZCL_STATUS_SUCCESS != emberAfReadServerAttribute(
             EP_RGB_LIGHT, ZCL_COLOR_CONTROL_CLUSTER_ID, ZCL_COLOR_CONTROL_CURRENT_X_ATTRIBUTE_ID,
-            &color_x, sizeof(color_x)
+            (uint8_t *) &color_x, sizeof(color_x)
     )) return SL_STATUS_FAIL;
     if ( EMBER_ZCL_STATUS_SUCCESS != emberAfReadServerAttribute(
             EP_RGB_LIGHT, ZCL_COLOR_CONTROL_CLUSTER_ID, ZCL_COLOR_CONTROL_CURRENT_Y_ATTRIBUTE_ID,
-            &color_y, sizeof(color_y)
+            (uint8_t *) &color_y, sizeof(color_y)
     )) return SL_STATUS_FAIL;
     if ( EMBER_ZCL_STATUS_SUCCESS != emberAfReadServerAttribute(
             EP_RGB_LIGHT, ZCL_LEVEL_CONTROL_CLUSTER_ID, ZCL_CURRENT_LEVEL_ATTRIBUTE_ID,
@@ -459,6 +458,66 @@ static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, u
     *red = (uint8_t) round( 255.0f * r );
     *green = (uint8_t) round( 255.0f * g );
     *blue = (uint8_t) round( 255.0f * b );
+
+    return SL_STATUS_OK;
+}
+
+/**
+ * @brief calculate and update XY color & level on the Color light endpoint, based
+ *        on rgb values (levels for EP 2, 3 and 4)
+ */
+sl_status_t _update_xy_color_from_rgb(uint8_t red, uint8_t green, uint8_t blue)
+{
+    // Normalize the RGB values
+    float r = red / 255;
+    float g = green / 255;
+    float b = blue / 255;
+
+    // Apply gamma correction
+    r = (r > 0.04045) ? powf((r + 0.055) / 1.055, 2.4) : (r / 12.92);
+    g = (g > 0.04045) ? powf((g + 0.055) / 1.055, 2.4) : (g / 12.92);
+    b = (b > 0.04045) ? powf((b + 0.055) / 1.055, 2.4) : (b / 12.92);
+
+    // Convert to XYZ color space
+    float X = r * 0.4124 + g * 0.3576 + b * 0.1805;
+    float Y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+    float Z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+
+    // Convert to xy color space
+    float x = X / (X + Y + Z);
+    float y = Y / (X + Y + Z);
+
+    // Calculate brightness
+    uint8_t brightness = round(Y * 255.0f);
+    uint16_t color_x = round( x * 65535 );
+    uint16_t color_y = round( y * 65535 );
+
+    emberAfWriteServerAttribute(
+        EP_RGB_LIGHT,
+        ZCL_LEVEL_CONTROL_CLUSTER_ID,
+        ZCL_CURRENT_LEVEL_ATTRIBUTE_ID,
+        &brightness,
+        ZCL_INT8U_ATTRIBUTE_TYPE
+    );
+    emberAfWriteServerAttribute(
+        EP_RGB_LIGHT,
+        ZCL_COLOR_CONTROL_CLUSTER_ID,
+        ZCL_COLOR_CONTROL_CURRENT_X_ATTRIBUTE_ID,
+        (uint8_t *) &color_x,
+        ZCL_INT16U_ATTRIBUTE_TYPE
+    );
+    emberAfWriteServerAttribute(
+        EP_RGB_LIGHT,
+        ZCL_COLOR_CONTROL_CLUSTER_ID,
+        ZCL_COLOR_CONTROL_CURRENT_Y_ATTRIBUTE_ID,
+        (uint8_t *) &color_y,
+        ZCL_INT16U_ATTRIBUTE_TYPE
+    );
+
+    sl_zigbee_app_debug_println("Updated RGB EP color_x: %d, color_y: %d, level: %d from RGB %d/%d/%d",
+        color_x, color_y, brightness,
+        red, green, blue
+    );
 
     return SL_STATUS_OK;
 }
