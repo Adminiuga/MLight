@@ -466,10 +466,15 @@ static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, u
     float r_linear = X * 1.656492f - Y * 0.354851f - Z * 0.255038f;
     float g_linear = -X * 0.707196f + Y * 1.655397f + Z * 0.036152f;
     float b_linear = X * 0.051713f - Y * 0.121364f + Z * 1.011530f;
+    // Convert to linear RGB
+    // r_linear = X * 3.2406f - Y * 1.5372f - Z * 0.4986f;
+    // g_linear = -X * 0.9689f + Y * 1.8758f + Z * 0.0415f;
+    // b_linear = X * 0.0557f - Y * 0.2040f + Z * 1.0570f;
+
 
     // Apply gamma correction to convert from linear to sRGB color space
-    float gamma = 2.4;
-    float a = 0.055;
+    float gamma = 2.4f;
+    float a = 0.055f;
     float r = (r_linear <= 0.0031308f) ? 12.92f*r_linear : (1.0f+a)*pow(r_linear, 1.0/gamma) - a;
     float g = (g_linear <= 0.0031308f) ? 12.92f*g_linear : (1.0f+a)*pow(g_linear, 1.0/gamma) - a;
     float b = (b_linear <= 0.0031308f) ? 12.92f*b_linear : (1.0f+a)*pow(b_linear, 1.0/gamma) - a;
@@ -490,9 +495,9 @@ static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, u
         b = 1;
     }
 
-    *red = (uint8_t) round( 255.0f * r );
-    *green = (uint8_t) round( 255.0f * g );
-    *blue = (uint8_t) round( 255.0f * b );
+    *red = (uint8_t) round( 255.0f * r * Y );
+    *green = (uint8_t) round( 255.0f * g * Y );
+    *blue = (uint8_t) round( 255.0f * b * Y );
     sl_zigbee_app_debug_println("Calculated RGB: %d/%d/%d)",
         (uint8_t) *red, (uint8_t) *blue, (uint8_t) *blue);
     return SL_STATUS_OK;
