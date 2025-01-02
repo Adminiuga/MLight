@@ -96,7 +96,7 @@ void emberAfPluginColorControlServerComputePwmFromXyCallback(uint8_t endpoint)
 {
     if ( _state.external_updates_disabled || (EP_RGB_LIGHT != endpoint) ) return;
     llight_disable_external_updates();
-    
+
     emberAfColorControlClusterPrintln("%d Updating RGB from XY", TIMESTAMP_MS);
     _sync_color_brightness_to_channels(endpoint);
 
@@ -452,14 +452,14 @@ static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, u
             &level, sizeof(level)
     )) return SL_STATUS_FAIL;
 
-    sl_zigbee_app_debug_println("Current x,y is (0x%x, 0x%x), level: %d", color_x, color_y, level);
+    sl_zigbee_app_debug_println("Current x,y is (0x%x, 0x%x), level: %d (int)", color_x, color_y, level);
 
     float x = color_x / 65535.0f;
     float y = color_y / 65535.0f;
     float z = 1.0f - x - y;
 
     float Y = ( 1.0f * level) / 255.0f ; // The reference white point luminance
-    sl_zigbee_app_debug_println("Current x,y is (%.5f, %.5x), luminance: %f", x, y, Y);
+    sl_zigbee_app_debug_println("Current x,y is (%.5f, %.5f), luminance: %f (float)", x, y, Y);
     float X = (Y / y) * x;
     float Z = (Y / y) * z;
 
@@ -493,7 +493,8 @@ static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, u
     *red = (uint8_t) round( 255.0f * r );
     *green = (uint8_t) round( 255.0f * g );
     *blue = (uint8_t) round( 255.0f * b );
-
+    sl_zigbee_app_debug_println("Calculated RGB: %d/%d/%d)",
+        (uint8_t) *red, (uint8_t) *blue, (uint8_t) *blue);
     return SL_STATUS_OK;
 }
 
