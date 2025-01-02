@@ -469,9 +469,9 @@ static EmberAfStatus _rgb_from_xy_and_brightness(uint8_t *red, uint8_t *green, u
 sl_status_t _update_xy_color_from_rgb(uint8_t red, uint8_t green, uint8_t blue)
 {
     // Normalize the RGB values
-    float r = red / 255;
-    float g = green / 255;
-    float b = blue / 255;
+    float r = red / 255.0f;
+    float g = green / 255.0f;
+    float b = blue / 255.0f;
 
     // Apply gamma correction
     r = (r > 0.04045) ? powf((r + 0.055) / 1.055, 2.4) : (r / 12.92);
@@ -489,8 +489,8 @@ sl_status_t _update_xy_color_from_rgb(uint8_t red, uint8_t green, uint8_t blue)
 
     // Calculate brightness
     uint8_t brightness = round(Y * 255.0f);
-    uint16_t color_x = round( x * 65535 );
-    uint16_t color_y = round( y * 65535 );
+    uint16_t color_x = round( x * 65535.0f );
+    uint16_t color_y = round( y * 65535.0f );
 
     emberAfWriteServerAttribute(
         EP_RGB_LIGHT,
