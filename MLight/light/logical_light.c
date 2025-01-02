@@ -515,21 +515,21 @@ sl_status_t _update_xy_color_from_rgb(uint8_t red, uint8_t green, uint8_t blue)
     float b = blue / 255.0f;
 
     // Apply gamma correction
-    r = (r > 0.04045) ? powf((r + 0.055) / 1.055, 2.4) : (r / 12.92);
-    g = (g > 0.04045) ? powf((g + 0.055) / 1.055, 2.4) : (g / 12.92);
-    b = (b > 0.04045) ? powf((b + 0.055) / 1.055, 2.4) : (b / 12.92);
+    r = (r > 0.04045f) ? powf((r + 0.055f) / 1.055f, 2.4f) : (r / 12.92f);
+    g = (g > 0.04045f) ? powf((g + 0.055f) / 1.055f, 2.4f) : (g / 12.92f);
+    b = (b > 0.04045f) ? powf((b + 0.055f) / 1.055f, 2.4f) : (b / 12.92f);
 
     // Convert to XYZ color space
-    float X = r * 0.4124 + g * 0.3576 + b * 0.1805;
-    float Y = r * 0.2126 + g * 0.7152 + b * 0.0722;
-    float Z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+    float X = r * 0.4124f + g * 0.3576f + b * 0.1805f;
+    float Y = r * 0.2126f + g * 0.7152f + b * 0.0722f;
+    float Z = r * 0.0193f + g * 0.1192f + b * 0.9505f;
 
     // Convert to xy color space
     float x = X / (X + Y + Z);
     float y = Y / (X + Y + Z);
 
     // Calculate brightness
-    uint8_t brightness = round(Y * 255.0f);
+    uint8_t brightness = round(Y * 255.0f );
     uint16_t color_x = round( x * 65535.0f );
     uint16_t color_y = round( y * 65535.0f );
 
