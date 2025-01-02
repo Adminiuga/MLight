@@ -68,6 +68,41 @@ void emberAfPluginLevelControlClusterServerPostInitCallback(uint8_t endpoint)
     _sync_hardware_state();
 }
 
+/** @brief Compute Pwm from HSV
+ *
+ * This function is called from the color server when it is time for the PWMs to
+ * be driven with a new value from the HSV values.
+ *
+ * @param endpoint The identifying endpoint Ver.: always
+ */
+void emberAfPluginColorControlServerComputePwmFromHsvCallback(uint8_t endpoint)
+{
+    if ( _state.external_updates_disabled ) return;
+    llight_disable_external_updates();
+    emberAfColorControlClusterPrintln("%d Updating temperature from HSV", TIMESTAMP_MS);
+
+
+    llight_enable_external_updates();
+}
+
+/** @brief Compute Pwm from HSV
+ *
+ * This function is called from the color server when it is time for the PWMs to
+ * be driven with a new value from the color X and color Y values.
+ *
+ * @param endpoint The identifying endpoint Ver.: always
+ */
+void emberAfPluginColorControlServerComputePwmFromXyCallback(uint8_t endpoint)
+{
+    if ( _state.external_updates_disabled || (EP_RGB_LIGHT != endpoint) ) return;
+    llight_disable_external_updates();
+    
+    emberAfColorControlClusterPrintln("%d Updating RGB from XY", TIMESTAMP_MS);
+    _sync_color_brightness_to_channels(endpoint);
+
+    llight_enable_external_updates();
+}
+
 // *****************************
 // Public method implementations
 // -----------------------------
