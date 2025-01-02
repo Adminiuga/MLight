@@ -18,7 +18,7 @@ on:
       - .github/workflows/build.yaml
       - .github/workflows/app-btl-build.yaml
       - .github/workflows/silabs-project-builder.yaml
-      - 'MGLight/**'
+      - 'MLight/**'
       - 'patches/**'
     branches:
       - main
@@ -26,6 +26,9 @@ on:
       - 'rc-*'
     tags:
       - '*'
+
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 env:
   sdk_version: ${{
@@ -106,7 +109,7 @@ jobs:
       sdk_version: ${{ needs.build-container.outputs.sdk_version }}
       device: ${{ matrix.device }}
       components: ${{ matrix.components }}
-      build_btl: ${{ github.event.inputs.build_btl != '' && inputs.build_btl || false }}
+      build_btl: ${{ github.event.inputs.build_btl != '' && inputs.build_btl || startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/tags/rc') || false }}
       image_name: ${{ needs.build-container.outputs.image_name }}
       btl_version: ${{ vars.btl_version != '' && vars.btl_version || '2' }}
       flavor: ${{ matrix.flavor }}
