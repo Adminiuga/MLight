@@ -19,6 +19,7 @@ vscode.conf
 */*.project.mak
 */build
 */gecko_sdk_*
+!patches/gecko_sdk_*
 */raz1_custom*
 
 */.pdm

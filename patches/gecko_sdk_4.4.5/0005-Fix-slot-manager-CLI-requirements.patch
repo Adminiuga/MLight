@@ -1,0 +1,56 @@
+From da5e8ef7c7c808549a47da34714ca4cd56507caa Mon Sep 17 00:00:00 2001
+From: Alexei Chetroi <alexei.chetroi@outlook.com>
+Date: Thu, 2 Jan 2025 21:13:06 -0500
+Subject: [PATCH] Fix slot-manager CLI requirements
+
+---
+ gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.c | 4 ++++
+ gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.h | 6 ++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.c b/gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.c
+index d84b865..eaf55fc 100644
+--- a/gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.c
++++ b/gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.c
+@@ -3,7 +3,9 @@
+  *
+  *****************************************************************************/
+ 
++#if defined(SL_CATALOG_CLI_PRESENT)
+ #include PLATFORM_HEADER
++
+ #include "slot-manager-cli.h"
+ #include "api/btl_interface.h"
+ #include "slot-manager.h"
+@@ -113,3 +115,5 @@ void sli_slot_manager_cli_print_slots_info(sl_cli_command_arg_t *arguments)
+     slotId++;
+   }
+ }
++
++#endif  // defined(SL_CATALOG_CLI_PRESENT)
+diff --git a/gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.h b/gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.h
+index 8bd1465..bcc5ac7 100644
+--- a/gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.h
++++ b/gecko_sdk_4.4.5/util/plugin/slot-manager/slot-manager-cli.h
+@@ -6,14 +6,16 @@
+ #ifndef __SLOT_MANAGER_CLI_H__
+ #define __SLOT_MANAGER_CLI_H__
+ 
+-#include "sl_cli.h"
+-
+ #define MAX_FLASH_READ_BYTES    100
+ 
++#if defined(SL_CATALOG_CLI_PRESENT)
++#include "sl_cli.h"
++
+ void sli_slot_manager_cli_bootload_slot(sl_cli_command_arg_t *arguments);
+ void sli_slot_manager_cli_erase_slot(sl_cli_command_arg_t *arguments);
+ void sli_slot_manager_cli_print_external_flash_info(sl_cli_command_arg_t *arguments);
+ void sli_slot_manager_cli_read_ext_flash(sl_cli_command_arg_t *arguments);
+ void sli_slot_manager_cli_print_slots_info(sl_cli_command_arg_t *arguments);
++#endif // defined(SL_CATALOG_CLI_PRESENT)
+ 
+ #endif // __SLOT_MANAGER_CLI_H__
+-- 
+2.47.1.windows.1
+

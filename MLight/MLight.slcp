@@ -196,6 +196,10 @@ configuration:
     value: USE_FIRST_SLOT
     condition:
       - zigbee_ota_client
+  - name: EMBER_AF_PLUGIN_ZCL_FRAMEWORK_CORE_CLI_ENABLED
+    value: 0
+    unless:
+      - cli
 
 define:
   - name: OS_CFG_COMPAT_INIT
