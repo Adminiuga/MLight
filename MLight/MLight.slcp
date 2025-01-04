@@ -237,4 +237,5 @@ tag:
   - hardware:device:ram:64
 
 sdk_extension:
-  - {id: raz1_custom_components, version: 0.0.1}
+  - id: raz1_custom_components
+    version: 0.0.2
