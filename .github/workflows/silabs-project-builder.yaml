@@ -149,8 +149,17 @@ jobs:
           cd ${{ env.sdk_path }}/extension
           for EXT in ${{ inputs.sdk_extensions }}
           do
-            echo "Clonining ${EXT}"
-            git clone "$EXT"
+            if [ "$EXT" == "*#*" ]
+            then
+              URL="part1="${EXT%%#*}"
+              tag="${EXT#*#}""
+              echo "Clonining ${URL} with '${TAG}' tag"
+              git clone --depth 1 -b "${TAG}" "$URL"
+            else
+              EXT=$(echo $EXT | cut -d'#' -f1)
+              echo "Clonining ${EXT}"
+              git clone --depth 1 "$EXT"
+            fi
           done
 
       - name: Trust SDK Extenstions
