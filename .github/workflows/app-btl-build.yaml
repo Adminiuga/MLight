@@ -103,7 +103,7 @@ jobs:
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
       sdk_extensions: >-
-        "https://github.com/Adminiuga/Raz1_custom_components_extension#0.0.2"
+        "https://github.com/Adminiuga/Raz1_custom_components_extension"
       sdkpatchpath: ''
       metadata_extra: "{}"
       flavor: ${{ inputs.flavor }}
