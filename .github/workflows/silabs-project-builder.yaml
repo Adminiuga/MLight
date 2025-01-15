@@ -30,6 +30,11 @@ on:
         required: false
         type: string
 
+      remove_components:
+        description: extra components to remove from the project. Comma separated
+        required: false
+        type: string
+
       configuration:
         required: false
         type: string
@@ -223,6 +228,7 @@ jobs:
         run: |
           slc generate \
               --with="${{ inputs.device }},${{ inputs.components }}" \
+              --without="${{ inputs.remove_components }}" \
               --project-file="${{ inputs.src_project_path }}/${{ inputs.project_name }}/${{ inputs.project_name }}.slcp" \
               --export-destination="$(pwd)/${{ inputs.export_project_name }}" \
               --project-name="${{ inputs.export_project_name }}" \
@@ -265,7 +271,7 @@ jobs:
       - name: Build Firmware
         run: |
           cd ${{ env.PROJECT_NAME }}
-          make -f ${{ env.PROJECT_NAME }}.Makefile release
+          make -f ${{ env.PROJECT_NAME }}.Makefile -j4 release
 
       - name: Get Bootloader version
         if: ${{ env.IS_BTL == 'yes' }}
