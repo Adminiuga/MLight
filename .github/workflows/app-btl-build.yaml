@@ -53,15 +53,45 @@ on:
 jobs:
   app-firmware-build:
     name: Zigbee MLight App
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name_suffix: debug
+
+          - name_suffix: sed
+            without: >-
+              debug_swo
+            configuration: >-
+              SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_SLEEPY_END_DEVICE,
+              SL_ZIGBEE_DEBUG_STACK_GROUP_ENABLED:0,
+              SL_ZIGBEE_DEBUG_CORE_GROUP_ENABLED:0,
+              SL_ZIGBEE_DEBUG_APP_GROUP_ENABLED:1,
+              SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED:0
+
+          - name_suffix: end-device
+            without: >-
+              debug_swo
+            configuration: >-
+              SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_END_DEVICE,
+              SL_ZIGBEE_DEBUG_STACK_GROUP_ENABLED:0,
+              SL_ZIGBEE_DEBUG_CORE_GROUP_ENABLED:0,
+              SL_ZIGBEE_DEBUG_APP_GROUP_ENABLED:1,
+              SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED:0
+
     uses: ./.github/workflows/silabs-project-builder.yaml
     with:
       image_name: ${{ inputs.image_name }}
       project_name: MLight
+      export_project_name: MLight-${{ matrix.name_suffix }}
+      src_project_path: .
       device: ${{ inputs.device }}
       components: ${{ inputs.components }}
       configuration: >-
         ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
+        ${{ matrix.configuration != '' && format('{0},', matrix.configuration) || '' }}
         SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
+      remove_components: ${{ matrix.without }}
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
       metadata_extra: "{}"
