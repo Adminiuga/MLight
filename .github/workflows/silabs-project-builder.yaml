@@ -380,6 +380,8 @@ jobs:
         name: Upload generated project sources
         with:
           name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}-Sources
+          retention-days: 2
           path: |
+            /__w/MLight/MLight
             ${{ env.PROJECT_NAME }}
             !${{ env.PROJECT_NAME }}/build/**
