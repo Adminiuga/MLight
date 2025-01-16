@@ -11,10 +11,9 @@ on:
         type: string
         default: "ghcr.io/${{ github.repository_owner }}/silabs-project-builder:${{ inputs.sdk_version }}"
 
-      export_project_name:
-        required: false
+      src_project:
+        required: true
         type: string
-        default: ''
 
       project_name:
         required: true
@@ -72,12 +71,6 @@ on:
         default: ''
         type: string
 
-      flavor:
-        required: false
-        description: Build type name
-        default: ''
-        type: string
-
       model:
         required: false
         description: Model attribute
@@ -99,9 +92,9 @@ on:
 
 
 env:
-  PROJECT_NAME: ${{ inputs.export_project_name == '' && inputs.project_name || inputs.export_project_name }}
-  IS_NEW_PROJECT: ${{ inputs.export_project_name != '' && 'yes' || 'no' }}
-  IS_BTL: ${{ startsWith(inputs.project_name, 'bootloader') && 'yes' || '' }}
+  PROJECT_NAME: ${{ inputs.project_name }}
+  IS_BTL: ${{ startsWith(inputs.src_project, 'bootloader') && 'yes' || '' }}
+  CONFIG_PATH: "${{ inputs.src_project_path }}/${{ inputs.src_project }}/config"
   branch_to_ota: >-
     ${{ ( github.ref_name == 'main' || (startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, 'rc')) )
         && '9'
@@ -136,7 +129,6 @@ jobs:
         shell: su --shell=/bin/bash builder {0}
     outputs:
       project_name: ${{ env.PROJECT_NAME }}
-      artifact_name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}
       ota_version: ${{ steps.ota_version.outputs.ota_version }}
       model_name: ${{ steps.ota_version.outputs.model_name }}
 
@@ -197,7 +189,7 @@ jobs:
       - name: Update dateCode in ZAP config
         if: ${{ env.IS_BTL != 'yes' }}
         run: |
-          cd "${{ env.PROJECT_NAME }}/config/zcl"
+          cd "${{ env.CONFIG_PATH }}/zcl"
           cp "zcl_config.zap" "zcl_config.zap~"
           FILTER='(. | .endpointTypes[].clusters[] | select(.name == "Basic") | .attributes[] | select(.code == 6)).defaultValue'
           DATE_CODE="${{ steps.ota_version.outputs.BUILD_DATE}}.${{ env.branch_to_build_type }}.${{ steps.ota_version.outputs.BUILD_ID_MOD100 }}"
@@ -207,7 +199,7 @@ jobs:
       - name: Update SWBuildId in ZAP config
         if: ${{ env.IS_BTL != 'yes' }}
         run: |
-          cd "${{ env.PROJECT_NAME }}/config/zcl"
+          cd "${{ env.CONFIG_PATH }}/zcl"
           cp "zcl_config.zap" "zcl_config.zap~"
           FILTER='(. | .endpointTypes[].clusters[] | select(.name == "Basic") | .attributes[] | select(.code == 16384)).defaultValue'
           SW_BUILD_ID="SHA1: $(echo ${{ github.sha }} | cut -c1-10)"
@@ -218,35 +210,23 @@ jobs:
         id: zcl_model
         if: ${{ env.IS_BTL != 'yes' }}
         run: |
-          cd "${{ env.PROJECT_NAME }}/config/zcl"
+          cd "${{ env.CONFIG_PATH }}/zcl"
           cp "zcl_config.zap" "zcl_config.zap~"
           FILTER='(. | .endpointTypes[].clusters[] | select(.name == "Basic") | .attributes[] | select(.code == 5)).defaultValue'
           jq "${FILTER} |= \"${MODEL_ID}\"" "zcl_config.zap~" > "zcl_config.zap"
 
       - name: Generate New Project
-        if: env.IS_NEW_PROJECT == 'yes'
         run: |
           slc generate \
               --with="${{ inputs.device }},${{ inputs.components }}" \
               --without="${{ inputs.remove_components }}" \
-              --project-file="${{ inputs.src_project_path }}/${{ inputs.project_name }}/${{ inputs.project_name }}.slcp" \
-              --export-destination="$(pwd)/${{ inputs.export_project_name }}" \
-              --project-name="${{ inputs.export_project_name }}" \
+              --project-file="${{ inputs.src_project_path }}/${{ inputs.src_project }}/${{ inputs.src_project }}.slcp" \
+              --export-destination="$(pwd)/${{ env.project_name }}" \
+              --project-name="${{ env.project_name }}" \
               --new-project \
               --force \
               --copy-proj-sources --copy-sdk-sources \
-              --configuration="${{ inputs.configuration }}" \
-              --output-type makefile
-
-      - name: Generate Existing Project
-        if: env.IS_NEW_PROJECT != 'yes'
-        run: |
-          slc generate \
-              --with="${{ inputs.device }},${{ inputs.components }}" \
-              --project-file="$(pwd)/${{ inputs.project_name }}/${{ inputs.project_name }}.slcp" \
-              --force \
-              --copy-sdk-sources \
-              --configuration="${{ inputs.configuration }}" \
+              --configuration="${{ inputs.configuration }},EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_FIRMWARE_VERSION:${{ steps.ota_version.outputs.ota_version }}" \
               --output-type makefile
 
       - name: Patch SDK
@@ -259,14 +239,6 @@ jobs:
               echo "Applying ${patch}"
               patch -p1 < $patch
           done || true
-
-      - name: Update OTA version
-        if: ${{ env.IS_BTL != 'yes' }}
-        run: |
-          cd ${{ env.PROJECT_NAME }}/config
-          sed -i -E \
-              's/^(#define\s+EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_FIRMWARE_VERSION)\s+[0-9]+\s*$/\1 ${{ steps.ota_version.outputs.ota_version }}/' \
-              ota-client-policy-config.h
 
       - name: Build Firmware
         run: |
@@ -359,7 +331,7 @@ jobs:
         if: (success() || failure()) && env.IS_BTL != 'yes'
         name: Upload application firmware
         with:
-          name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}
+          name: ${{ env.PROJECT_NAME }}
           path: |
             ${{ env.PROJECT_NAME }}/build/release/version.json
             ${{ env.PROJECT_NAME }}/build/release/*.gbl
@@ -370,7 +342,7 @@ jobs:
         if: (success() || failure()) && env.IS_BTL == 'yes'
         name: Upload bootloader firmware
         with:
-          name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}
+          name: ${{ env.PROJECT_NAME }}
           path: |
             ${{ env.PROJECT_NAME }}/artifact/version.json
             ${{ env.PROJECT_NAME }}/artifact/*.s37
@@ -379,9 +351,8 @@ jobs:
         if: (success() || failure()) && vars.ARTIFACT_UPLOAD_SOURCES != ''
         name: Upload generated project sources
         with:
-          name: ${{ inputs.flavor == '' && env.PROJECT_NAME || format('{0}-{1}', env.PROJECT_NAME, inputs.flavor) }}-Sources
+          name: ${{ env.PROJECT_NAME }}-Sources
           retention-days: 2
           path: |
-            /__w/MLight/MLight
             ${{ env.PROJECT_NAME }}
             !${{ env.PROJECT_NAME }}/build/**

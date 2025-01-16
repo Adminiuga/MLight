@@ -82,9 +82,9 @@ jobs:
     uses: ./.github/workflows/silabs-project-builder.yaml
     with:
       image_name: ${{ inputs.image_name }}
-      project_name: MLight
-      export_project_name: MLight-${{ matrix.name_suffix }}
-      src_project_path: .
+      src_project: MLight
+      src_project_path: ${{ github.workspace }}
+      project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
       device: ${{ inputs.device }}
       components: ${{ inputs.components }}
       configuration: >-
@@ -98,7 +98,6 @@ jobs:
       ota_string: ${{ inputs.app_ota_string }}
       sdk_extensions: >-
         "https://github.com/Adminiuga/Raz1_custom_components_extension"
-      flavor: ${{ inputs.flavor }}
 
   bootloader-build:
     if: inputs.build_btl
@@ -106,7 +105,7 @@ jobs:
     uses: ./.github/workflows/silabs-project-builder.yaml
     with:
       image_name: ${{ inputs.image_name }}
-      project_name: >-
+      src_project: >-
         ${{ vars.btl_project_name != ''
             && vars.btl_project_name
             || 'bootloader-storage-internal-single-lzma'
@@ -121,7 +120,7 @@ jobs:
               )
         }}
 
-      export_project_name: "MLight_btl"
+      project_name: "MLight_btl-${{ inputs.flavor }}"
       device: ${{ inputs.device }}
       components: >-
         ${{ startsWith( inputs.device, 'EFR32MG12P') && 'brd4166a' || '' }},
@@ -136,7 +135,6 @@ jobs:
         "https://github.com/Adminiuga/Raz1_custom_components_extension"
       sdkpatchpath: ''
       metadata_extra: "{}"
-      flavor: ${{ inputs.flavor }}
 
 
   bootloader-ota:
