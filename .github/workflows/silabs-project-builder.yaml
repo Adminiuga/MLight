@@ -323,7 +323,7 @@ jobs:
           cd ${{ env.PROJECT_NAME }}/build/release
           GBL_FILE="${{ env.PROJECT_NAME }}.gbl"
           commander gbl create "${GBL_FILE}" \
-                    --app build/release/${{ env.PROJECT_NAME }}.hex \
+                    --app ${{ env.PROJECT_NAME }}.hex \
                     --compress lzma \
                     --device ${{ inputs.device }} --metadata version.json
           echo "GBL_APP_FILE=${GBL_FILE}" >> "$GITHUB_ENV"
