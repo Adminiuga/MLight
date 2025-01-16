@@ -152,23 +152,21 @@ jobs:
 
     env:
       ota_version: ${{ needs.app-firmware-build.outputs.ota_version }}
-      app_artifact_name: ${{ needs.app-firmware-build.outputs.artifact_name }}
       app_project_name: ${{ needs.app-firmware-build.outputs.project_name }}
-      btl_artifact_name: ${{ needs.bootloader-build.outputs.artifact_name }}
       btl_project_name: ${{ needs.bootloader-build.outputs.project_name }}
 
     steps:
       - uses: actions/download-artifact@v4
         name: Download App firmware
         with:
-          name: ${{ env.app_artifact_name }}
-          path: ${{ env.app_artifact_name }}
+          name: ${{ env.app_project_name }}
+          path: ${{ env.app_project_name }}
 
       - uses: actions/download-artifact@v4
         name: Download bootloader build
         with:
-          name: ${{ env.btl_artifact_name }}
-          path: ${{ env.btl_artifact_name }}
+          name: ${{ env.btl_project_name }}
+          path: ${{ env.btl_project_name }}
 
       - name: Adjust permission
         shell: bash
@@ -178,7 +176,7 @@ jobs:
         id: app_meta
         shell: bash
         run: |
-          cd ${{ env.app_artifact_name }}
+          cd ${{ env.app_project_name }}
           echo "ota_image_type_id=$(cat version.json | jq .ota_image_type_id)" >> "$GITHUB_OUTPUT"
           echo "manufacturer_id=$(cat version.json | jq .manufacturer_id)" >> "$GITHUB_OUTPUT"
 
@@ -186,19 +184,19 @@ jobs:
         id: btl_meta
         shell: bash
         run: |
-          cd ${{ env.btl_artifact_name }}
+          cd ${{ env.btl_project_name }}
           echo "bootloader_version=$(cat version.json | jq .bootloader_version)" \
                >> "$GITHUB_OUTPUT"
 
       - name: Create GBL and OTA with bootloader
         run: |
-          cd ${{ env.btl_artifact_name }}
+          cd ${{ env.btl_project_name }}
           commander gbl create "${{ env.app_project_name }}-btl.gbl" \
-            --app "../${{ env.app_artifact_name }}/${{ env.app_project_name }}.hex" \
+            --app "../${{ env.app_project_name }}/${{ env.app_project_name }}.hex" \
             --bootloader "${{ env.btl_project_name }}-crc.s37" \
             --compress lzma \
             --device ${{ inputs.device }} \
-            --metadata "../${{ env.app_artifact_name }}/version.json"
+            --metadata "../${{ env.app_project_name }}/version.json"
 
           OTA_FN="${{ env.app_project_name }}-${{ env.ota_version }}-btl"
           /gecko_sdk/protocol/zigbee/tool/image-builder/image-builder-linux \
@@ -216,10 +214,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         name: Upload bootloader & bootloader OTA image artifact
         with:
-          name: ${{ env.btl_artifact_name }}
+          name: ${{ env.btl_project_name }}
           overwrite: true
           path: |
-            ${{ env.btl_artifact_name }}/version.json
-            ${{ env.btl_artifact_name }}/*.gbl
-            ${{ env.btl_artifact_name }}/*.s37
-            ${{ env.btl_artifact_name }}/*.ota
+            ${{ env.btl_project_name }}/version.json
+            ${{ env.btl_project_name }}/*.gbl
+            ${{ env.btl_project_name }}/*.s37
+            ${{ env.btl_project_name }}/*.ota
