@@ -309,21 +309,44 @@ jobs:
                     || 'artifact/version.json'
                   }}
 
+      - name: Download Bootloader
+        if: ${{ inputs.with_bootloader }}
+        id: dnld_btl_artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.with_bootloader }}
+          path: ${{ env.PROJECT_NAME }}/build/release/bootloader
+
       - name: Generate gbl Firmware
         if: ${{ env.IS_BTL != 'yes' }}
         run: |
-          cd ${{ env.PROJECT_NAME }}
-          commander gbl create build/release/${{ env.PROJECT_NAME }}.gbl \
+          cd ${{ env.PROJECT_NAME }}/build/release
+          GBL_FILE="${{ env.PROJECT_NAME }}.gbl"
+          commander gbl create "${GBL_FILE}" \
                     --app build/release/${{ env.PROJECT_NAME }}.hex \
                     --compress lzma \
-                    --device ${{ inputs.device }} --metadata build/release/version.json
+                    --device ${{ inputs.device }} --metadata version.json
+          echo "GBL_APP_FILE=${GBL_FILE}" >> "$GITHUB_ENV"
+
+      - name: Generate gbl Firmware with Bootloader
+        if: ${{ inputs.with_bootloader }}
+        run: |
+          cd ${{ env.PROJECT_NAME }}/build/release
+          GBL_FILE="${{ env.PROJECT_NAME }}-btl.gbl"
+          commander gbl create "${GBL_FILE}" \
+                    --app ${{ env.PROJECT_NAME }}.hex \
+                    --bootloader bootloader/${{ inputs.with_bootloader }}-crc.s37 \
+                    --compress lzma \
+                    --device ${{ inputs.device }} --metadata version.json
+          echo "GBL_APP_BTL_FILE=${GBL_FILE}" >> "$GITHUB_ENV"
 
       - name: Generate OTA Image
         if: ${{ env.IS_BTL != 'yes' }}
         run: |
           cd ${{ env.PROJECT_NAME }}/build/release
+          OTA_APP_FILE="${{ env.PROJECT_NAME }}-${{ steps.ota_version.outputs.ota_version }}.ota"
           /gecko_sdk/protocol/zigbee/tool/image-builder/image-builder-linux \
-              --create "${{ env.PROJECT_NAME }}-${{ steps.ota_version.outputs.ota_version }}.ota" \
+              --create "${OTA_APP_FILE}" \
               --version ${{ steps.ota_version.outputs.ota_version }} \
               ${{ inputs.ota_string != ''
                   && format('--string "{0}" \', inputs.ota_string)
@@ -332,7 +355,26 @@ jobs:
               --image-type ${{ env.OTA_IMAGE_TYPE_ID }} \
               --manuf-id ${{ env.OTA_MANUFACTURER_ID }} \
               --tag-id 0x0000 \
-              --tag-file "${{ env.PROJECT_NAME}}.gbl"
+              --tag-file "${{ env.GBL_APP_FILE }}"
+          echo "OTA_APP_FILE=${OTA_APP_FILE}" >> "$GITHUB_ENV"
+
+      - name: Generate OTA Image with Bootloader
+        if: ${{ inputs.with_bootloader }}
+        run: |
+          cd ${{ env.PROJECT_NAME }}/build/release
+          OTA_APP_BTL_FILE="${{ env.PROJECT_NAME }}-${{ steps.ota_version.outputs.ota_version }}-btl.ota"
+          /gecko_sdk/protocol/zigbee/tool/image-builder/image-builder-linux \
+              --create "${OTA_APP_BTL_FILE}" \
+              --version ${{ steps.ota_version.outputs.ota_version }} \
+              ${{ inputs.ota_string != ''
+                  && format('--string "{0}" \', inputs.ota_string)
+                  || '\'
+              }}
+              --image-type ${{ env.OTA_IMAGE_TYPE_ID }} \
+              --manuf-id ${{ env.OTA_MANUFACTURER_ID }} \
+              --tag-id 0x0000 \
+              --tag-file "${{ env.GBL_APP_BTL_FILE }}"
+          echo "OTA_APP_BTL_FILE=${OTA_APP_BTL_FILE}" >> "$GITHUB_ENV"
 
       - uses: actions/upload-artifact@v4
         if: (success() || failure()) && env.IS_BTL != 'yes'
