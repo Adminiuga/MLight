@@ -53,7 +53,7 @@ on:
 jobs:
   app-firmware-build-bootloader:
     if: inputs.build_btl
-    name: Zigbee MLight App
+    name: Zigbee MLight App with Bootloader
     needs: bootloader-build
     strategy:
       fail-fast: false
@@ -103,7 +103,7 @@ jobs:
 
   app-firmware-build:
     if: ${{ !inputs.build_btl }}
-    name: Zigbee MLight App
+    name: Zigbee MLight App (no bootloader)
     strategy:
       fail-fast: false
       matrix:
