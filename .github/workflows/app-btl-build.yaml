@@ -58,6 +58,7 @@ jobs:
       matrix:
         include:
           - name_suffix: debug
+            with_bootloader: ${{ inputs.build_btl && needs.bootloader-build.outputs.project_name || '' }}
 
           - name_suffix: sed
             without: >-
@@ -68,6 +69,7 @@ jobs:
               SL_ZIGBEE_DEBUG_CORE_GROUP_ENABLED:0,
               SL_ZIGBEE_DEBUG_APP_GROUP_ENABLED:1,
               SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED:0
+            with_bootloader: ${{ inputs.build_btl && needs.bootloader-build.outputs.project_name || '' }}
 
           - name_suffix: end-device
             without: >-
@@ -78,6 +80,7 @@ jobs:
               SL_ZIGBEE_DEBUG_CORE_GROUP_ENABLED:0,
               SL_ZIGBEE_DEBUG_APP_GROUP_ENABLED:1,
               SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED:0
+            with_bootloader: ${{ inputs.build_btl && needs.bootloader-build.outputs.project_name || '' }}
 
     uses: ./.github/workflows/silabs-project-builder.yaml
     with:
@@ -97,6 +100,7 @@ jobs:
       ota_string: ${{ inputs.app_ota_string }}
       sdk_extensions: >-
         "https://github.com/Adminiuga/Raz1_custom_components_extension"
+      with_bootloader: ${{ matrix.with_bootloader }}
 
   bootloader-build:
     if: inputs.build_btl
