@@ -126,7 +126,7 @@ env:
 
 jobs:
   firmware-build:
-    name: Build '${{ inputs.PROJECT_NAME }}' Project
+    name: Build '${{ inputs.PROJECT_NAME }}' Project ${{ inputs.with_bootloader && 'with bootloader' || '' }}
     runs-on: ubuntu-latest
     container:
       image: ${{ inputs.image_name }}
