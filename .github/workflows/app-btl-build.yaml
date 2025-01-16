@@ -83,7 +83,6 @@ jobs:
     with:
       image_name: ${{ inputs.image_name }}
       src_project: MLight
-      src_project_path: ${{ github.workspace }}
       project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
       device: ${{ inputs.device }}
       components: ${{ inputs.components }}

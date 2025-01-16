@@ -22,6 +22,7 @@ on:
       src_project_path:
         description: "Source path of the project. defaults to $GITHUB_WORKSPACE"
         required: false
+        default: "."
         type: string
 
       components:
@@ -221,8 +222,8 @@ jobs:
               --with="${{ inputs.device }},${{ inputs.components }}" \
               --without="${{ inputs.remove_components }}" \
               --project-file="${{ inputs.src_project_path }}/${{ inputs.src_project }}/${{ inputs.src_project }}.slcp" \
-              --export-destination="$(pwd)/${{ env.project_name }}" \
-              --project-name="${{ env.project_name }}" \
+              --export-destination="$(pwd)/${{ env.PROJECT_NAME }}" \
+              --project-name="${{ env.PROJECT_NAME }}" \
               --new-project \
               --force \
               --copy-proj-sources --copy-sdk-sources \
