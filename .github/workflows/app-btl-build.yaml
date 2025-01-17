@@ -81,7 +81,7 @@ jobs:
               SL_ZIGBEE_DEBUG_APP_GROUP_ENABLED:1,
               SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED:0
 
-    uses: ./.github/workflows/silabs-project-builder.yaml
+    uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
     with:
       image_name: ${{ inputs.image_name }}
       src_project: MLight
@@ -130,7 +130,7 @@ jobs:
               SL_ZIGBEE_DEBUG_APP_GROUP_ENABLED:1,
               SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED:0
 
-    uses: ./.github/workflows/silabs-project-builder.yaml
+    uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
     with:
       image_name: ${{ inputs.image_name }}
       src_project: MLight
@@ -152,7 +152,7 @@ jobs:
   bootloader-build:
     if: inputs.build_btl
     name: Application bootloader
-    uses: ./.github/workflows/silabs-project-builder.yaml
+    uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
     with:
       image_name: ${{ inputs.image_name }}
       src_project: >-
