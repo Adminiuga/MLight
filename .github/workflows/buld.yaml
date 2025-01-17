@@ -99,7 +99,7 @@ jobs:
           - device: MGM210LA22JIF
             components: >-
               brd_mgm210_expansion;raz1_custom_components,
-            flavor: MLight
+            flavor: MGM210
           - device: brd4181b
             flavor: brd4181b
             configuration: >-
