@@ -115,20 +115,20 @@ jobs:
               debug_swo
             configuration: >-
               SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_SLEEPY_END_DEVICE,
-              SL_ZIGBEE_DEBUG_STACK_GROUP_ENABLED:0,
-              SL_ZIGBEE_DEBUG_CORE_GROUP_ENABLED:0,
-              SL_ZIGBEE_DEBUG_APP_GROUP_ENABLED:1,
-              SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED:0
+              SL_ZIGBEE_DEBUG_STACK_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_CORE_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_APP_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_ZCL_GROUP_RUNTIME_DEFAULT:0
 
           - name_suffix: end-device
             without: >-
               debug_swo
             configuration: >-
               SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_END_DEVICE,
-              SL_ZIGBEE_DEBUG_STACK_GROUP_ENABLED:0,
-              SL_ZIGBEE_DEBUG_CORE_GROUP_ENABLED:0,
-              SL_ZIGBEE_DEBUG_APP_GROUP_ENABLED:1,
-              SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED:0
+              SL_ZIGBEE_DEBUG_STACK_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_CORE_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_APP_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_ZCL_GROUP_RUNTIME_DEFAULT:0
 
     uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
     with:
