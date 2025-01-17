@@ -1,7 +1,7 @@
 # The entire pipeline was shamelessy borrowed from https://github.com/NabuCasa/silabs-firmware-builder
 # Kudos to NabuCasa and Stefan
 
-name: Silicon Labs builder
+name: Project Build Trigger
 
 on:
   workflow_dispatch:
