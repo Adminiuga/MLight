@@ -85,6 +85,7 @@ jobs:
     with:
       image_name: ${{ inputs.image_name }}
       src_project: MLight
+      model: MLight${{ inputs.flavor != '' && format('-{0}', inputs.flavor) || '' }}
       project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
       device: ${{ inputs.device }}
       components: ${{ inputs.components }}
@@ -134,6 +135,7 @@ jobs:
     with:
       image_name: ${{ inputs.image_name }}
       src_project: MLight
+      model: MLight${{ inputs.flavor != '' && format('-{0}', inputs.flavor) || '' }}
       project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
       device: ${{ inputs.device }}
       components: ${{ inputs.components }}
