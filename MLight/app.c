@@ -155,6 +155,7 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
   );
   if ( mask != CLUSTER_MASK_SERVER ) return; // we only process server attributes
 
+#if !defined(SL_CATALOG_ZIGBEE_LEVEL_CONTROL_PRESENT)
   if (clusterId == ZCL_ON_OFF_CLUSTER_ID
       && attributeId == ZCL_ON_OFF_ATTRIBUTE_ID) {
     if (value[0] == 0x00) {
@@ -178,10 +179,29 @@ void emberAfPostAttributeChangeCallback(uint8_t endpoint,
 #endif
       }
       sl_dmp_ui_set_light_direction(DMP_UI_DIRECTION_INVALID);
-  } else if ( clusterId == ZCL_LEVEL_CONTROL_CLUSTER_ID
-         && attributeId == ZCL_CURRENT_LEVEL_ATTRIBUTE_ID ) {
-    llight_set_level( endpoint, value[0] );
   }
+#else
+  if ( clusterId == ZCL_LEVEL_CONTROL_CLUSTER_ID
+      && attributeId == ZCL_CURRENT_LEVEL_ATTRIBUTE_ID ) {
+      llight_set_level( endpoint, value[0] );
+  } else if ( ZCL_LEVEL_CONTROL_REMAINING_TIME_ATTRIBUTE_ID == attributeId ) {
+    // Handle light state update depending on the remaining time attribute
+    uint8_t onOff;
+    if ( emberAfReadServerAttribute(endpoint,
+                                    ZCL_ON_OFF_CLUSTER_ID,
+                                    ZCL_ON_OFF_ATTRIBUTE_ID,
+                                    (uint8_t *) &onOff,
+                                    sizeof(onOff)) != EMBER_ZCL_STATUS_SUCCESS ) {
+      emberAfAppPrintln("Couldn't read current 'on/off' state: %s, forcing light off");
+      llight_turnoff_light(endpoint);
+      return;
+    }
+    if ( onOff || ( (value[0] == 0) && (value[1] == 0) ) ) {
+      emberAfOnOffClusterPrintln("Turning light %s on %d endpoint", (onOff ? "on" : "off"), endpoint);
+      llight_turnonoff_light(endpoint, onOff);
+    }
+  }
+#endif
 }
 
 /** @brief Pre Command Received

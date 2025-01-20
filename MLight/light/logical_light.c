@@ -132,13 +132,7 @@ void llight_enable_external_updates(void)
  */
 sl_status_t llight_turnon_light(uint8_t endpoint)
 {
-    if ( _state.external_updates_disabled ) return SL_STATUS_OK;
-    llight_disable_external_updates();
-
-    sl_status_t status = _turn_onoff_light(endpoint, true);
-
-    llight_enable_external_updates();
-    return status;
+    return llight_turnonoff_light(endpoint, true);
 }
 
 /**
@@ -147,15 +141,19 @@ sl_status_t llight_turnon_light(uint8_t endpoint)
  */
 sl_status_t llight_turnoff_light(uint8_t endpoint)
 {
+    return llight_turnonoff_light(endpoint, false);
+}
+
+sl_status_t llight_turnonoff_light(uint8_t endpoint, bool turnOn)
+{
     if ( _state.external_updates_disabled ) return SL_STATUS_OK;
     llight_disable_external_updates();
 
-    sl_status_t status = _turn_onoff_light(endpoint, false);
+    sl_status_t status = _turn_onoff_light(endpoint, turnOn);
 
     llight_enable_external_updates();
     return status;
 }
-
 
 /**
  * @brief set level for the light
