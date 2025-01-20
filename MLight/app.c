@@ -88,6 +88,9 @@ void emberAfMainInitCallback(void)
 {
   #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
   rz_led_blink_init();
+  #if SL_SIMPLE_LED_COUNT >= 1
+  rz_led_blink_blink_led_on( 500, 0 );
+  #endif
   #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
   #if SL_POWER_MANAGER_DEBUG == 1
   sl_power_manager_debug_print_em_requirements();
