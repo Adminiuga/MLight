@@ -210,6 +210,7 @@ source:
   - path: light/hw_light.c
   - path: light/logical_light.h
   - path: light/logical_light.c
+  - path: getcko_sdk_4.4.5/protocl/zigbee/framework/plugin/level-control/level-control.c
 
 config_file:
   - path: config/zcl/zcl_config.zap

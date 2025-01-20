@@ -19,6 +19,9 @@ vscode.conf
 */*.project.mak
 */build
 */gecko_sdk_*
+# I don't like it, but untill we have a better solution, we need to ignore the following files
+!*/gecko_sdk_*/protocol/zigbee/app/framework/plugin/level-control/level-control.c
+
 */raz1_custom*
 
 */.pdm
