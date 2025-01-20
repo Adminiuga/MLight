@@ -15,10 +15,10 @@
 #define rz_led_blink_pattern(count, length, pattern, ledIndex)
 #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
 
-#define LED_BLINK_SHORT_MS         100
+#define LED_BLINK_SHORT_MS         150
 #define LED_BLINK_LONG_MS          750
 #define LED_BLINK_IDENTIFY_MS      500
-#define LED_BLINK_NETWORK_UP_COUNT 3
+#define LED_BLINK_NETWORK_UP_COUNT 5
 
 
 typedef struct {
