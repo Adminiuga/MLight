@@ -22,14 +22,17 @@
 
 
 typedef struct {
+  bool isInitialized;
   bool leavingNwk;
   uint8_t  joinAttempt;         // ReJoin Attempt Number
   bool     isCurrentlySteering; // true if currently is trying to steer the network
   bool     haveNetworkToken;    // is there network token (join or rejoin)
   uint32_t currentChannel;      // current channel
+  sl_zigbee_event_t dnjcEvent;  // event for the Device Network Join Control, used to indicate status on power on
 } DeviceNwkJoinControl_State_t;
 
 static DeviceNwkJoinControl_State_t dnjcState = {
+    .isInitialized = false,
     .leavingNwk = false,
     .joinAttempt = 0,
     .isCurrentlySteering = false,
@@ -42,6 +45,7 @@ static DeviceNwkJoinControl_State_t dnjcState = {
 static bool writeIdentifyTime(uint16_t identifyTime);
 static void startIdentifying(void);
 static void stopIdentifying(void);
+static void _event_handler(sl_zigbee_event_t *event);
 
 
 /**
@@ -176,6 +180,22 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
 }
 
 /**
+ * @brief Initialize the Device Network Join Control plugin
+ *        Sets the delay to indicate the network status on startup.
+ *        If the network is not up after the DNJC_STARTUP_STATUS_DELAY_MS,
+ *        then initiate network steering.
+ */
+EmberNetworkStatus dnjcInit(void)
+{
+  if ( ! dnjcState.isInitialized ) {
+    dnjcState.isInitialized = true;
+    sl_zigbee_event_init(&dnjcState.dnjcEvent, _event_handler);
+    sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS);
+  }
+  return SL_STATUS_OK;
+}
+
+/**
  * @brief Indicate network status. Short 3 blinks is on network.
  *        Short and Long blink -- no parent. Long blink -- no network.
  * @return current network status
@@ -237,4 +257,26 @@ static void startIdentifying(void)
 static void stopIdentifying(void)
 {
   writeIdentifyTime(0);
+}
+
+/**
+ * @brief Device Network Join Control event handler. For now, just going to be called
+ *        once upon startup, to indicate status. If the network is not up, then start network steering.
+ */
+void _event_handler(sl_zigbee_event_t *event)
+{
+  sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
+  EmberNetworkStatus nwkState = emberAfNetworkState();
+
+  if ( EMBER_JOINED_NETWORK == nwkState
+       || EMBER_JOINED_NETWORK_NO_PARENT == nwkState ) {
+    dnjcIndicateNetworkState();
+  } else {
+    // should not be leaving, but if we are, then reschedule
+    if ( dnjcState.leavingNwk ) {
+      sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS >> 1);
+    } else {
+      emberAfPluginNetworkSteeringStart();
+    }
+  }
 }

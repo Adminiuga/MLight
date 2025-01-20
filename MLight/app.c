@@ -92,6 +92,7 @@ void emberAfMainInitCallback(void)
   #if SL_POWER_MANAGER_DEBUG == 1
   sl_power_manager_debug_print_em_requirements();
   #endif // SL_POWER_MANAGER_DEBUG == 1
+  dnjcInit();
 }
 
 /** @brief Start feedback.
