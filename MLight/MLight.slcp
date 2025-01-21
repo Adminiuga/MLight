@@ -174,17 +174,17 @@ configuration:
   - name: configMAX_TASK_NAME_LEN
     value: 30
   - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
-    value: 2286
+    value: 18288
     condition:
       - mgm210la22jif
       - zigbee_ota_client
   - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
-    value: 2287
+    value: 18296
     condition:
       - efr32mg12p332f1024gl125
       - zigbee_ota_client
   - name: EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID
-    value: 2288
+    value: 18304
     condition:
       - brd4181b
       - zigbee_ota_client
