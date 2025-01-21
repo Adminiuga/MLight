@@ -42,6 +42,7 @@
 
 #include "sl_dmp_ui_stub.h"
 
+#include "sl_simple_led_instances.h"
 #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
 #include <rz_led_blink.h>
 #include "mods/device-nwk-join-control.h"

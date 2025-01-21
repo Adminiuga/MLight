@@ -95,7 +95,7 @@ SL_WEAK void dnjcDeviceLeftNwkCb(void)
 void emberAfStackStatusCallback(EmberStatus status)
 {
   EmberNetworkStatus nwkState = emberAfNetworkState();
-  emberAfCorePrintln("Stack status=0x%X, nwkState=%d", status, nwkState);
+  sl_zigbee_app_debug_println("%d (dnjc) Stack status=0x%X, nwkState=%d", TIMESTAMP_MS, status, nwkState);
 
   switch (nwkState) {
     case EMBER_NO_NETWORK:
@@ -203,7 +203,7 @@ EmberNetworkStatus dnjcInit(void)
 EmberNetworkStatus dnjcIndicateNetworkState(void)
 {
   EmberNetworkStatus nwkState = emberAfNetworkState();
-  sl_zigbee_app_debug_println("Indicating Current Network State: %d", nwkState);
+  sl_zigbee_app_debug_println("%d Indicating Current Network State: %d", TIMESTAMP_MS, nwkState);
 
   switch (nwkState) {
     case EMBER_JOINED_NETWORK:
@@ -220,7 +220,7 @@ EmberNetworkStatus dnjcIndicateNetworkState(void)
         LED_BLINK_LONG_MS,  // interblink pause
         LED_BLINK_LONG_MS,  // LED On Blink
       };
-      rz_led_blink_pattern(1, sizeof(pattern), pattern, COMMISSIONING_STATUS_LED);
+      rz_led_blink_pattern(1, sizeof(pattern)/sizeof(pattern[0]), pattern, COMMISSIONING_STATUS_LED);
       break;
 
     case EMBER_NO_NETWORK:
@@ -270,6 +270,7 @@ void _event_handler(sl_zigbee_event_t *event)
 
   if ( EMBER_JOINED_NETWORK == nwkState
        || EMBER_JOINED_NETWORK_NO_PARENT == nwkState ) {
+    sl_zigbee_app_debug_println("%d dnjc startup nwk status", TIMESTAMP_MS);
     dnjcIndicateNetworkState();
   } else {
     // should not be leaving, but if we are, then reschedule
