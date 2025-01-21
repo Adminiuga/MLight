@@ -266,6 +266,25 @@ static void stopIdentifying(void)
 void _event_handler(sl_zigbee_event_t *event)
 {
   sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
+
+  // for non-sleepy end devices, set shorter polling intervals
+#if SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE == SLI_ZIGBEE_NETWORK_DEVICE_TYPE_END_DEVICE && defined(SL_CATALOG_ZIGBEE_END_DEVICE_SUPPORT_PRESENT)
+  uint32_t pollMs;
+  pollMs = emberAfGetShortPollIntervalMsCallback();
+  pollMs = pollMs >> 2;
+  if ( pollMs ) {
+    emberAfSetShortPollIntervalMsCallback( pollMs );
+    sl_zigbee_app_debug_println("%d Setting short poll to %dms (non-sleepy ED)", TIMESTAMP_MS, pollMs);
+  }
+
+  pollMs = emberAfGetLongPollIntervalMsCallback();
+  pollMs = pollMs >> 2;
+  if ( pollMs ) {
+    emberAfSetLongPollIntervalMsCallback( pollMs );
+    sl_zigbee_app_debug_println("%d Setting long poll to %dms (non-sleepy ED)", TIMESTAMP_MS, pollMs);
+  }
+#endif // SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE
+
   EmberNetworkStatus nwkState = emberAfNetworkState();
 
   if ( EMBER_JOINED_NETWORK == nwkState

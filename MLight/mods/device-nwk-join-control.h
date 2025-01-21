@@ -5,6 +5,8 @@
 #define DNJC_STARTUP_STATUS_DELAY_MS 3000
 #endif
 
+#include <af-types.h>
+
 /**
  * @brief Initialize the Device Network Join Control plugin
  *        Sets the delay to indicate the network status on startup.
