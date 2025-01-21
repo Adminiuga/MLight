@@ -18,18 +18,21 @@
 #define LED_BLINK_SHORT_MS         100
 #define LED_BLINK_LONG_MS          750
 #define LED_BLINK_IDENTIFY_MS      500
-#define LED_BLINK_NETWORK_UP_COUNT 3
+#define LED_BLINK_NETWORK_UP_COUNT 5
 
 
 typedef struct {
+  bool isInitialized;
   bool leavingNwk;
   uint8_t  joinAttempt;         // ReJoin Attempt Number
   bool     isCurrentlySteering; // true if currently is trying to steer the network
   bool     haveNetworkToken;    // is there network token (join or rejoin)
   uint32_t currentChannel;      // current channel
+  sl_zigbee_event_t dnjcEvent;  // event for the Device Network Join Control, used to indicate status on power on
 } DeviceNwkJoinControl_State_t;
 
 static DeviceNwkJoinControl_State_t dnjcState = {
+    .isInitialized = false,
     .leavingNwk = false,
     .joinAttempt = 0,
     .isCurrentlySteering = false,
@@ -42,6 +45,7 @@ static DeviceNwkJoinControl_State_t dnjcState = {
 static bool writeIdentifyTime(uint16_t identifyTime);
 static void startIdentifying(void);
 static void stopIdentifying(void);
+static void _event_handler(sl_zigbee_event_t *event);
 
 
 /**
@@ -91,7 +95,7 @@ SL_WEAK void dnjcDeviceLeftNwkCb(void)
 void emberAfStackStatusCallback(EmberStatus status)
 {
   EmberNetworkStatus nwkState = emberAfNetworkState();
-  emberAfCorePrintln("Stack status=0x%X, nwkState=%d", status, nwkState);
+  sl_zigbee_app_debug_println("%d (dnjc) Stack status=0x%X, nwkState=%d", TIMESTAMP_MS, status, nwkState);
 
   switch (nwkState) {
     case EMBER_NO_NETWORK:
@@ -176,6 +180,22 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
 }
 
 /**
+ * @brief Initialize the Device Network Join Control plugin
+ *        Sets the delay to indicate the network status on startup.
+ *        If the network is not up after the DNJC_STARTUP_STATUS_DELAY_MS,
+ *        then initiate network steering.
+ */
+EmberNetworkStatus dnjcInit(void)
+{
+  if ( ! dnjcState.isInitialized ) {
+    dnjcState.isInitialized = true;
+    sl_zigbee_event_init(&dnjcState.dnjcEvent, _event_handler);
+    sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS);
+  }
+  return SL_STATUS_OK;
+}
+
+/**
  * @brief Indicate network status. Short 3 blinks is on network.
  *        Short and Long blink -- no parent. Long blink -- no network.
  * @return current network status
@@ -183,7 +203,7 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
 EmberNetworkStatus dnjcIndicateNetworkState(void)
 {
   EmberNetworkStatus nwkState = emberAfNetworkState();
-  sl_zigbee_app_debug_println("Indicating Current Network State: %d", nwkState);
+  sl_zigbee_app_debug_println("%d Indicating Current Network State: %d", TIMESTAMP_MS, nwkState);
 
   switch (nwkState) {
     case EMBER_JOINED_NETWORK:
@@ -200,7 +220,7 @@ EmberNetworkStatus dnjcIndicateNetworkState(void)
         LED_BLINK_LONG_MS,  // interblink pause
         LED_BLINK_LONG_MS,  // LED On Blink
       };
-      rz_led_blink_pattern(1, sizeof(pattern), pattern, COMMISSIONING_STATUS_LED);
+      rz_led_blink_pattern(1, sizeof(pattern)/sizeof(pattern[0]), pattern, COMMISSIONING_STATUS_LED);
       break;
 
     case EMBER_NO_NETWORK:
@@ -237,4 +257,27 @@ static void startIdentifying(void)
 static void stopIdentifying(void)
 {
   writeIdentifyTime(0);
+}
+
+/**
+ * @brief Device Network Join Control event handler. For now, just going to be called
+ *        once upon startup, to indicate status. If the network is not up, then start network steering.
+ */
+void _event_handler(sl_zigbee_event_t *event)
+{
+  sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
+  EmberNetworkStatus nwkState = emberAfNetworkState();
+
+  if ( EMBER_JOINED_NETWORK == nwkState
+       || EMBER_JOINED_NETWORK_NO_PARENT == nwkState ) {
+    sl_zigbee_app_debug_println("%d dnjc startup nwk status", TIMESTAMP_MS);
+    dnjcIndicateNetworkState();
+  } else {
+    // should not be leaving, but if we are, then reschedule
+    if ( dnjcState.leavingNwk ) {
+      sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS >> 1);
+    } else {
+      emberAfPluginNetworkSteeringStart();
+    }
+  }
 }

@@ -42,6 +42,7 @@
 
 #include "sl_dmp_ui_stub.h"
 
+#include "sl_simple_led_instances.h"
 #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
 #include <rz_led_blink.h>
 #include "mods/device-nwk-join-control.h"
@@ -88,10 +89,14 @@ void emberAfMainInitCallback(void)
 {
   #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
   rz_led_blink_init();
+  #if SL_SIMPLE_LED_COUNT >= 1
+  rz_led_blink_blink_led_on( 500, 0 );
+  #endif
   #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
   #if SL_POWER_MANAGER_DEBUG == 1
   sl_power_manager_debug_print_em_requirements();
   #endif // SL_POWER_MANAGER_DEBUG == 1
+  dnjcInit();
 }
 
 /** @brief Start feedback.
