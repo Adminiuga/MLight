@@ -89,38 +89,27 @@ jobs:
           - name_suffix: debug
             image_id_subtype: 7
 
-    runs-on: ubuntu-latest
-    steps:
-      - id: image_id
-        if: ${{ inputs.image_id != 0 }}
-        name: Derive IMAGE_ID from inputs and image_id_subtype
-        shell: bash
-        run: |
-          IMAGE_ID=$(expr ${{ inputs.image_id }} + ${{ matrix.image_id_subtype }})
-          echo "IMAGE_ID=${IMAGE_ID}" >> "GITHUB_OUTPUT"
-          echo "Using ${IMAGE_ID} as IMAGE_ID"
- 
-      - uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
-        with:
-          image_name: ${{ inputs.image_name }}
-          src_project: MLight
-          model: MLight${{ inputs.flavor != '' && format('-{0}', inputs.flavor) || '' }}
-          project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
-          device: ${{ inputs.device }}
-          components: ${{ inputs.components }}
-          configuration: >-
-            ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
-            ${{ matrix.configuration != '' && format('{0},', matrix.configuration) || '' }}
-            SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
-            ${{ inputs.image_id != 0 && format(',EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID:%d', steps.image_id.outputs.IMAGE_ID) || '' }},
-          remove_components: ${{ matrix.without }}
-          extra_c_defs: ""
-          sdk_version: ${{ inputs.sdk_version }}
-          metadata_extra: "{}"
-          ota_string: ${{ inputs.app_ota_string }}
-          sdk_extensions: >-
-            "https://github.com/Adminiuga/Raz1_custom_components_extension"
-          with_bootloader: ${{ needs.bootloader-build.outputs.project_name }}
+    uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
+    with:
+      image_name: ${{ inputs.image_name }}
+      src_project: MLight
+      model: MLight${{ inputs.flavor != '' && format('-{0}', inputs.flavor) || '' }}
+      project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
+      device: ${{ inputs.device }}
+      components: ${{ inputs.components }}
+      configuration: >-
+        ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
+        ${{ matrix.configuration != '' && format('{0},', matrix.configuration) || '' }}
+        SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
+        ${{ inputs.image_id != 0 && matrix.image_id_subtype && format(',EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID:%d%d', inputs.image_id, matrix.image_id_subtype) || '' }},
+      remove_components: ${{ matrix.without }}
+      extra_c_defs: ""
+      sdk_version: ${{ inputs.sdk_version }}
+      metadata_extra: "{}"
+      ota_string: ${{ inputs.app_ota_string }}
+      sdk_extensions: >-
+        "https://github.com/Adminiuga/Raz1_custom_components_extension"
+      with_bootloader: ${{ needs.bootloader-build.outputs.project_name }}
 
   app-firmware-build:
     if: ${{ !inputs.build_btl }}
@@ -154,37 +143,26 @@ jobs:
           - name_suffix: debug
             image_id_subtype: 7
 
-    runs-on: ubuntu-latest
-    steps:
-      - id: image_id
-        if: ${{ inputs.image_id != 0 }}
-        name: Derive IMAGE_ID from inputs and image_id_subtype
-        shell: bash
-        run: |
-          IMAGE_ID=$(expr ${{ inputs.image_id }} + ${{ matrix.image_id_subtype }})
-          echo "IMAGE_ID=${IMAGE_ID}" >> "GITHUB_OUTPUT"
-          echo "Using ${IMAGE_ID} as IMAGE_ID"
- 
-
-      - uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
-        with:
-          image_name: ${{ inputs.image_name }}
-          src_project: MLight
-          model: MLight${{ inputs.flavor != '' && format('-{0}', inputs.flavor) || '' }}
-          project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
-          device: ${{ inputs.device }}
-          components: ${{ inputs.components }}
-          configuration: >-
-            ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
-            ${{ matrix.configuration != '' && format('{0},', matrix.configuration) || '' }}
-            SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
-          remove_components: ${{ matrix.without }}
-          extra_c_defs: ""
-          sdk_version: ${{ inputs.sdk_version }}
-          metadata_extra: "{}"
-          ota_string: ${{ inputs.app_ota_string }}
-          sdk_extensions: >-
-            "https://github.com/Adminiuga/Raz1_custom_components_extension"
+    uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
+    with:
+      image_name: ${{ inputs.image_name }}
+      src_project: MLight
+      model: MLight${{ inputs.flavor != '' && format('-{0}', inputs.flavor) || '' }}
+      project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
+      device: ${{ inputs.device }}
+      components: ${{ inputs.components }}
+      configuration: >-
+        ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
+        ${{ matrix.configuration != '' && format('{0},', matrix.configuration) || '' }}
+        SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
+        ${{ inputs.image_id != 0 && matrix.image_id_subtype && format(',EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID:%d%d', inputs.image_id, matrix.image_id_subtype) || '' }},
+      remove_components: ${{ matrix.without }}
+      extra_c_defs: ""
+      sdk_version: ${{ inputs.sdk_version }}
+      metadata_extra: "{}"
+      ota_string: ${{ inputs.app_ota_string }}
+      sdk_extensions: >-
+        "https://github.com/Adminiuga/Raz1_custom_components_extension"
 
   bootloader-build:
     if: inputs.build_btl

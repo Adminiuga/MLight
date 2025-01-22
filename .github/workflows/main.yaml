@@ -56,15 +56,15 @@ jobs:
               custom_tb2;raz1_custom_components,
               mx25_flash_shutdown_usart
             flavor: TBS2
-            image_id: 18296
+            image_id: 2287
           - device: MGM210LA22JIF
             components: >-
               brd_mgm210_expansion;raz1_custom_components,
             flavor: MGM210
-            image_id: 18288
+            image_id: 2286
           - device: brd4181b
             flavor: brd4181b
-            image_id: 18304
+            image_id: 2288
     uses: ./.github/workflows/app-btl-build.yaml
     with:
       sdk_version: ${{ needs.build-container.outputs.sdk_version }}
