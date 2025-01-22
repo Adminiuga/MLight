@@ -88,6 +88,8 @@ jobs:
 
           - name_suffix: debug
             image_id_subtype: 7
+            configuration: >-
+              SL_IOSTREAM_USART_VCOM_RESTRICT_ENERGY_MODE_TO_ALLOW_RECEPTION:1
 
     uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
     with:
@@ -142,6 +144,8 @@ jobs:
 
           - name_suffix: debug
             image_id_subtype: 7
+            configuration: >-
+              SL_IOSTREAM_USART_VCOM_RESTRICT_ENERGY_MODE_TO_ALLOW_RECEPTION:1
 
     uses: zha-ng/workflows-silabs/.github/workflows/slc-project-builder.yaml@v1
     with:
