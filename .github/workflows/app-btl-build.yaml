@@ -101,7 +101,7 @@ jobs:
         ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
         ${{ matrix.configuration != '' && format('{0},', matrix.configuration) || '' }}
         SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
-        ${{ inputs.image_id != 0 && matrix.image_id_subtype && format(',EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID:%d%d', inputs.image_id, matrix.image_id_subtype) || '' }},
+        ${{ inputs.image_id != 0 && matrix.image_id_subtype && format(',EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID:{0}{1}', inputs.image_id, matrix.image_id_subtype) || '' }},
       remove_components: ${{ matrix.without }}
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
@@ -155,7 +155,7 @@ jobs:
         ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
         ${{ matrix.configuration != '' && format('{0},', matrix.configuration) || '' }}
         SL_IOSTREAM_USART_VCOM_RX_BUFFER_SIZE:32
-        ${{ inputs.image_id != 0 && matrix.image_id_subtype && format(',EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID:%d%d', inputs.image_id, matrix.image_id_subtype) || '' }},
+        ${{ inputs.image_id != 0 && matrix.image_id_subtype && format(',EMBER_AF_PLUGIN_OTA_CLIENT_POLICY_IMAGE_TYPE_ID:{0}{1}', inputs.image_id, matrix.image_id_subtype) || '' }},
       remove_components: ${{ matrix.without }}
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
