@@ -20,6 +20,12 @@
 #define LED_BLINK_IDENTIFY_MS      500
 #define LED_BLINK_NETWORK_UP_COUNT 5
 
+enum uint8_t {
+  DNJC_SM_IDLE = 0,
+  DNJC_SM_INDICATE_STARTUP_NWK,
+  DNJC_SM_INDICATE_LEAVING_NWK,
+  DNJC_SM_INDICATE_START_STEERING
+};
 
 typedef struct {
   bool isInitialized;
@@ -29,6 +35,7 @@ typedef struct {
   bool     haveNetworkToken;    // is there network token (join or rejoin)
   uint32_t currentChannel;      // current channel
   sl_zigbee_event_t dnjcEvent;  // event for the Device Network Join Control, used to indicate status on power on
+  uint8_t smState;              // state machine state
 } DeviceNwkJoinControl_State_t;
 
 static DeviceNwkJoinControl_State_t dnjcState = {
@@ -38,6 +45,7 @@ static DeviceNwkJoinControl_State_t dnjcState = {
     .isCurrentlySteering = false,
     .haveNetworkToken = false,
     .currentChannel = 0,
+    .smState = DNJC_SM_IDLE,
 };
 
 //----------------
@@ -46,6 +54,9 @@ static bool writeIdentifyTime(uint16_t identifyTime);
 static void startIdentifying(void);
 static void stopIdentifying(void);
 static void _event_handler(sl_zigbee_event_t *event);
+static void _event_state_indicate_startup_nwk(void);
+static void _event_state_indicate_leaving_nwk(void);
+static void _event_state_indicate_start_steering_nwk(void);
 
 
 /**
@@ -228,6 +239,7 @@ EmberNetworkStatus dnjcIndicateNetworkState(void)
       break;
 
     default:
+      rz_led_blink_counted(2, LED_BLINK_LONG_MS, COMMISSIONING_STATUS_LED);
       break;
   }
 
