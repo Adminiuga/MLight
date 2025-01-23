@@ -83,6 +83,12 @@ component:
   - {id: zigbee_ota_storage_simple_eeprom}
   - {id: slot_manager}
   - {from: raz1_custom_components, id: rz_led_blink}
+  - id: power_configuration_server
+    from: raz1_custom_components
+    condition: [ mgm210la22jif ]
+  - id: power_configuration_server
+    from: raz1_custom_components
+    condition: [ efr32mg12p332f1024gl125 ]
 
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
@@ -212,6 +218,11 @@ configuration:
     value: USE_FIRST_SLOT
     condition:
       - zigbee_ota_client
+  - name: SL_POWER_CONFIGURATION_BATTERY_TYPE
+    value: SL_POWER_CONFIGURATION_BATTERY_TYPE_18650
+    condition:
+      - efr32mg12p332f1024gl125
+      - power_configuration_server
 
 define:
   - name: OS_CFG_COMPAT_INIT
@@ -249,6 +260,16 @@ config_file:
     path: template/brd4181b/sl_simple_rgb_pwm_led_rgb_led0_config.h
   - path: template/rz_button_press_config.h
     file_id: rz_button_press_configuration_file_id
+  - override:
+      component: sl_battery_monitor
+      file_id: sl_battery_monitor_config
+    path: template/tbs2/sl_battery_monitor_config.h
+    condition: [ sl_battery_monitor, efr32mg12p332f1024gl125 ]
+  - override:
+      component: sl_battery_monitor
+      file_id: sl_battery_monitor_config
+    path: template/brd_mgm210_expansion/sl_battery_monitor_config.h
+    condition: [ sl_battery_monitor, brd_mgm210_expansion ]
 
 include:
   - path: ./
