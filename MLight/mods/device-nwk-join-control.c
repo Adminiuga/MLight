@@ -35,7 +35,6 @@ typedef struct {
   bool     haveNetworkToken;    // is there network token (join or rejoin)
   uint32_t currentChannel;      // current channel
   sl_zigbee_event_t dnjcEvent;  // event for the Device Network Join Control, used to indicate status on power on
-  uint8_t smState;              // state machine state
   void (*smPostTransition) (void); // step to execute for state machine transition
 } DeviceNwkJoinControl_State_t;
 
@@ -46,7 +45,6 @@ static DeviceNwkJoinControl_State_t dnjcState = {
     .isCurrentlySteering = false,
     .haveNetworkToken = false,
     .currentChannel = 0,
-    .smState = DNJC_SM_IDLE,
     .smPostTransition = NULL,
 };
 
@@ -206,7 +204,6 @@ EmberNetworkStatus dnjcInit(void)
     dnjcState.isInitialized = true;
     sl_zigbee_event_init(&dnjcState.dnjcEvent, _event_handler);
     sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS);
-    dnjcState.smState = DNJC_SM_INDICATE_STARTUP_NWK;
     dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
   }
   return SL_STATUS_OK;
@@ -310,7 +307,6 @@ void _event_handler(sl_zigbee_event_t *event)
 
 void _event_state_indicate_startup_nwk(void)
 {
-  dnjcState.smState = DNJC_SM_IDLE;
   dnjcState.smPostTransition = NULL;
 
   EmberNetworkStatus nwkState = emberAfNetworkState();
@@ -323,7 +319,6 @@ void _event_state_indicate_startup_nwk(void)
     // should not be leaving, but if we are, then reschedule
     if ( dnjcState.leavingNwk ) {
       sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS >> 1);
-      dnjcState.smState = DNJC_SM_INDICATE_STARTUP_NWK;
       dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
     } else {
       _indicate_start_steering_nwk();
@@ -339,7 +334,6 @@ void _indicate_leaving_nwk(void)
 {
   rz_led_blink_blink_led_on(LED_BLINK_LONG_MS, COMMISSIONING_STATUS_LED);
   dnjcState.smPostTransition = _post_indicate_leaving_nwk;
-  dnjcState.smState = DNJC_SM_INDICATE_LEAVING_NWK;
   sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
   sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, LED_BLINK_LONG_MS);
 }
@@ -349,7 +343,6 @@ void _indicate_leaving_nwk(void)
  */
 void _post_indicate_leaving_nwk(void)
 {
-  dnjcState.smState = DNJC_SM_IDLE;
   dnjcState.smPostTransition = NULL;
   dnjcState.leavingNwk = true;
   sl_zigbee_app_debug_println("%d Leaving Network", TIMESTAMP_MS);
@@ -372,6 +365,5 @@ void _indicate_start_steering_nwk(void)
 
 void _post_indicate_start_steering_nwk(void)
 {
-  dnjcState.smState = DNJC_SM_IDLE;
   dnjcState.smPostTransition = NULL;
 }
