@@ -20,6 +20,13 @@
 #define LED_BLINK_IDENTIFY_MS      500
 #define LED_BLINK_NETWORK_UP_COUNT 5
 
+#if SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE == SLI_ZIGBEE_NETWORK_DEVICE_TYPE_SLEEPY_END_DEVICE
+#define MAX_STEERING_SEQ_ATTEMPTS  15
+#else
+#define MAX_STEERING_SEQ_ATTEMPTS  11
+#endif
+
+
 typedef struct {
   bool isInitialized;
   bool leavingNwk;
@@ -126,7 +133,8 @@ void app_button_press_cb(uint8_t button, uint8_t duration)
   {
     EmberNetworkStatus state = dnjcIndicateNetworkState();
     if (state == EMBER_NO_NETWORK) {
-      // no network, short or long press -> start network steering
+      // no network, short or long press -> reset attempt count, start network steering
+      dnjcState.joinAttempt = 0;
       dnjcState.isCurrentlySteering = true;
       emberAfPluginNetworkSteeringStart();
     } else {
@@ -177,8 +185,20 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
   dnjcIndicateNetworkState();
   dnjcState.isCurrentlySteering = false;
   if (status == EMBER_SUCCESS) {
+    dnjcState.joinAttempt = 0;
     startIdentifying();
   } else {
+    dnjcState.joinAttempt++;
+    if ( dnjcState.joinAttempt > MAX_STEERING_SEQ_ATTEMPTS ) {
+      dnjcState.joinAttempt = MAX_STEERING_SEQ_ATTEMPTS;
+    }
+    uint32_t delayS = 1 << dnjcState.joinAttempt;
+    sl_zigbee_app_debug_println("%d Network Steering failed, retrying in %d seconds",
+                                TIMESTAMP_MS,
+                                delayS);
+    sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
+    dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
+    sl_zigbee_event_set_delay_qs(&dnjcState.dnjcEvent, delayS << 2);
     stopIdentifying();
   }
 }
