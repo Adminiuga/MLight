@@ -110,12 +110,10 @@ void emberAfStackStatusCallback(EmberStatus status)
 
   switch (nwkState) {
     case EMBER_NO_NETWORK:
-      if ( dnjcState.leavingNwk ) {
-        // We voluntarily left the network, try to rejoin
-        sl_zigbee_event_set_inactive( &dnjcState.dnjcEvent );
-        dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
-        sl_zigbee_event_set_delay_ms( &dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS );
-      }
+      // Keep trying finding the network
+      sl_zigbee_event_set_inactive( &dnjcState.dnjcEvent );
+      dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
+      sl_zigbee_event_set_delay_ms( &dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS );
       dnjcState.leavingNwk = false; // leave has completed.
       stopIdentifying();
       break;
