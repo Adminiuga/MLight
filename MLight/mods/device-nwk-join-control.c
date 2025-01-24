@@ -138,6 +138,7 @@ void app_button_press_cb(uint8_t button, uint8_t duration)
     EmberNetworkStatus state = dnjcIndicateNetworkState();
     if (state == EMBER_NO_NETWORK) {
       // no network, short or long press -> start network steering
+      dnjcState.isCurrentlySteering = true;
       emberAfPluginNetworkSteeringStart();
     } else {
       // there's network, short or long press
@@ -185,6 +186,7 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
     "Network Steering Complete: status=0x%X, totalBeacons=%d, joinAttempts=%d, finalState=%d",
     status, totalBeacons, joinAttempts, finalState);
   dnjcIndicateNetworkState();
+  dnjcState.isCurrentlySteering = false;
   if (status == EMBER_SUCCESS) {
     startIdentifying();
   } else {
@@ -364,6 +366,7 @@ void _post_indicate_leaving_nwk(void)
 void _indicate_start_steering_nwk(void)
 {
   rz_led_blink_blink_led_on(LED_BLINK_LONG_MS << 1, COMMISSIONING_STATUS_LED);
+  dnjcState.isCurrentlySteering = true;
   emberAfPluginNetworkSteeringStart();
 }
 
