@@ -20,6 +20,12 @@
 #define LED_BLINK_IDENTIFY_MS      500
 #define LED_BLINK_NETWORK_UP_COUNT 5
 
+#if SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE == SLI_ZIGBEE_NETWORK_DEVICE_TYPE_SLEEPY_END_DEVICE
+#define MAX_STEERING_SEQ_ATTEMPTS  15
+#else
+#define MAX_STEERING_SEQ_ATTEMPTS  11
+#endif
+
 
 typedef struct {
   bool isInitialized;
@@ -29,6 +35,7 @@ typedef struct {
   bool     haveNetworkToken;    // is there network token (join or rejoin)
   uint32_t currentChannel;      // current channel
   sl_zigbee_event_t dnjcEvent;  // event for the Device Network Join Control, used to indicate status on power on
+  void (*smPostTransition) (void); // step to execute for state machine transition
 } DeviceNwkJoinControl_State_t;
 
 static DeviceNwkJoinControl_State_t dnjcState = {
@@ -38,6 +45,7 @@ static DeviceNwkJoinControl_State_t dnjcState = {
     .isCurrentlySteering = false,
     .haveNetworkToken = false,
     .currentChannel = 0,
+    .smPostTransition = NULL,
 };
 
 //----------------
@@ -46,6 +54,9 @@ static bool writeIdentifyTime(uint16_t identifyTime);
 static void startIdentifying(void);
 static void stopIdentifying(void);
 static void _event_handler(sl_zigbee_event_t *event);
+static void _event_state_indicate_startup_nwk(void);
+static void _indicate_leaving_nwk(void);
+static void _post_indicate_leaving_nwk(void);
 
 
 /**
@@ -99,7 +110,12 @@ void emberAfStackStatusCallback(EmberStatus status)
 
   switch (nwkState) {
     case EMBER_NO_NETWORK:
+      // Keep trying finding the network
+      sl_zigbee_event_set_inactive( &dnjcState.dnjcEvent );
+      dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
+      sl_zigbee_event_set_delay_ms( &dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS );
       dnjcState.leavingNwk = false; // leave has completed.
+      stopIdentifying();
       break;
     default:
       break;
@@ -122,16 +138,16 @@ void app_button_press_cb(uint8_t button, uint8_t duration)
   {
     EmberNetworkStatus state = dnjcIndicateNetworkState();
     if (state == EMBER_NO_NETWORK) {
-      // no network, short or long press -> start network steering
+      // no network, short or long press -> reset attempt count, start network steering
+      dnjcState.joinAttempt = 0;
+      dnjcState.isCurrentlySteering = true;
       emberAfPluginNetworkSteeringStart();
     } else {
       // there's network, short or long press
       if (longPress) {
         // network & long press -> leave network
-        dnjcState.leavingNwk = true;
         sl_zigbee_app_debug_println("Button- Leave Nwk");
-        emberLeaveNetwork();
-        emberClearBindingTable();
+        _indicate_leaving_nwk();
       } else {
         // has network, short press 
         if (state == EMBER_JOINED_NETWORK) {
@@ -172,9 +188,22 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
     "Network Steering Complete: status=0x%X, totalBeacons=%d, joinAttempts=%d, finalState=%d",
     status, totalBeacons, joinAttempts, finalState);
   dnjcIndicateNetworkState();
+  dnjcState.isCurrentlySteering = false;
   if (status == EMBER_SUCCESS) {
+    dnjcState.joinAttempt = 0;
     startIdentifying();
   } else {
+    dnjcState.joinAttempt++;
+    if ( dnjcState.joinAttempt > MAX_STEERING_SEQ_ATTEMPTS ) {
+      dnjcState.joinAttempt = MAX_STEERING_SEQ_ATTEMPTS;
+    }
+    uint32_t delayS = 1 << dnjcState.joinAttempt;
+    sl_zigbee_app_debug_println("%d Network Steering failed, retrying in %d seconds",
+                                TIMESTAMP_MS,
+                                delayS);
+    sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
+    dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
+    sl_zigbee_event_set_delay_qs(&dnjcState.dnjcEvent, delayS << 2);
     stopIdentifying();
   }
 }
@@ -191,6 +220,7 @@ EmberNetworkStatus dnjcInit(void)
     dnjcState.isInitialized = true;
     sl_zigbee_event_init(&dnjcState.dnjcEvent, _event_handler);
     sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS);
+    dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
   }
   return SL_STATUS_OK;
 }
@@ -228,6 +258,7 @@ EmberNetworkStatus dnjcIndicateNetworkState(void)
       break;
 
     default:
+      rz_led_blink_counted(2, LED_BLINK_LONG_MS, COMMISSIONING_STATUS_LED);
       break;
   }
 
@@ -285,18 +316,54 @@ void _event_handler(sl_zigbee_event_t *event)
   }
 #endif // SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE
 
-  EmberNetworkStatus nwkState = emberAfNetworkState();
+  if ( dnjcState.smPostTransition ) {
+    dnjcState.smPostTransition();
+  }
+}
+
+void _event_state_indicate_startup_nwk(void)
+{
+  dnjcState.smPostTransition = NULL;
+
+  EmberNetworkStatus nwkState = dnjcIndicateNetworkState();
 
   if ( EMBER_JOINED_NETWORK == nwkState
        || EMBER_JOINED_NETWORK_NO_PARENT == nwkState ) {
-    sl_zigbee_app_debug_println("%d dnjc startup nwk status", TIMESTAMP_MS);
-    dnjcIndicateNetworkState();
+    sl_zigbee_app_debug_println("%d dnjc startup: may have network, give it some time", TIMESTAMP_MS);
   } else {
     // should not be leaving, but if we are, then reschedule
     if ( dnjcState.leavingNwk ) {
       sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS >> 1);
+      dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
     } else {
+      sl_zigbee_app_debug_println("%d dnjc startup no network, initiate steering", TIMESTAMP_MS);
       emberAfPluginNetworkSteeringStart();
     }
   }
+}
+
+/**
+ * @brief indicates the intent to leave the network and after the indications is complete
+ *        leaves the network in the post transition step.
+ */
+void _indicate_leaving_nwk(void)
+{
+  rz_led_blink_blink_led_on(LED_BLINK_LONG_MS, COMMISSIONING_STATUS_LED);
+  dnjcState.smPostTransition = _post_indicate_leaving_nwk;
+  stopIdentifying();
+  sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
+  sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, LED_BLINK_LONG_MS);
+}
+
+/**
+ * @brief post transition step after indicating the intent to leave the network.
+ */
+void _post_indicate_leaving_nwk(void)
+{
+  dnjcState.smPostTransition = NULL;
+  dnjcState.leavingNwk = true;
+  sl_zigbee_app_debug_println("%d Leaving Network", TIMESTAMP_MS);
+  emberLeaveNetwork();
+  emberClearBindingTable();
+  emberAfClearReportTableCallback();
 }
