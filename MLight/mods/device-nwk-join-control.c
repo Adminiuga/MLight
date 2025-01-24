@@ -36,6 +36,7 @@ typedef struct {
   uint32_t currentChannel;      // current channel
   sl_zigbee_event_t dnjcEvent;  // event for the Device Network Join Control, used to indicate status on power on
   uint8_t smState;              // state machine state
+  void (*smPostTransition) (void); // step to execute for state machine transition
 } DeviceNwkJoinControl_State_t;
 
 static DeviceNwkJoinControl_State_t dnjcState = {
@@ -46,6 +47,7 @@ static DeviceNwkJoinControl_State_t dnjcState = {
     .haveNetworkToken = false,
     .currentChannel = 0,
     .smState = DNJC_SM_IDLE,
+    .smPostTransition = NULL,
 };
 
 //----------------
@@ -55,8 +57,10 @@ static void startIdentifying(void);
 static void stopIdentifying(void);
 static void _event_handler(sl_zigbee_event_t *event);
 static void _event_state_indicate_startup_nwk(void);
-static void _event_state_indicate_leaving_nwk(void);
-static void _event_state_indicate_start_steering_nwk(void);
+static void _indicate_leaving_nwk(void);
+static void _post_indicate_leaving_nwk(void);
+static void _indicate_start_steering_nwk(void);
+static void _post_indicate_start_steering_nwk(void);
 
 
 /**
@@ -139,10 +143,8 @@ void app_button_press_cb(uint8_t button, uint8_t duration)
       // there's network, short or long press
       if (longPress) {
         // network & long press -> leave network
-        dnjcState.leavingNwk = true;
         sl_zigbee_app_debug_println("Button- Leave Nwk");
-        emberLeaveNetwork();
-        emberClearBindingTable();
+        _indicate_leaving_nwk();
       } else {
         // has network, short press 
         if (state == EMBER_JOINED_NETWORK) {
@@ -202,6 +204,8 @@ EmberNetworkStatus dnjcInit(void)
     dnjcState.isInitialized = true;
     sl_zigbee_event_init(&dnjcState.dnjcEvent, _event_handler);
     sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS);
+    dnjcState.smState = DNJC_SM_INDICATE_STARTUP_NWK;
+    dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
   }
   return SL_STATUS_OK;
 }
@@ -297,6 +301,16 @@ void _event_handler(sl_zigbee_event_t *event)
   }
 #endif // SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE
 
+  if ( dnjcState.smPostTransition ) {
+    dnjcState.smPostTransition();
+  }
+}
+
+void _event_state_indicate_startup_nwk(void)
+{
+  dnjcState.smState = DNJC_SM_IDLE;
+  dnjcState.smPostTransition = NULL;
+
   EmberNetworkStatus nwkState = emberAfNetworkState();
 
   if ( EMBER_JOINED_NETWORK == nwkState
@@ -307,8 +321,54 @@ void _event_handler(sl_zigbee_event_t *event)
     // should not be leaving, but if we are, then reschedule
     if ( dnjcState.leavingNwk ) {
       sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS >> 1);
+      dnjcState.smState = DNJC_SM_INDICATE_STARTUP_NWK;
+      dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
     } else {
-      emberAfPluginNetworkSteeringStart();
+      _indicate_start_steering_nwk();
     }
   }
+}
+
+/**
+ * @brief indicates the intent to leave the network and after the indications is complete
+ *        leaves the network in the post transition step.
+ */
+void _indicate_leaving_nwk(void)
+{
+  rz_led_blink_blink_led_on(LED_BLINK_LONG_MS, COMMISSIONING_STATUS_LED);
+  dnjcState.smPostTransition = _post_indicate_leaving_nwk;
+  dnjcState.smState = DNJC_SM_INDICATE_LEAVING_NWK;
+  sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
+  sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, LED_BLINK_LONG_MS);
+}
+
+/**
+ * @brief post transition step after indicating the intent to leave the network.
+ */
+void _post_indicate_leaving_nwk(void)
+{
+  dnjcState.smState = DNJC_SM_IDLE;
+  dnjcState.smPostTransition = NULL;
+  dnjcState.leavingNwk = true;
+  sl_zigbee_app_debug_println("%d Leaving Network", TIMESTAMP_MS);
+  emberLeaveNetwork();
+  emberClearBindingTable();
+  emberAfClearReportTableCallback();
+}
+
+/**
+ * @brief indicates the intent to start steering the network and starts
+ *        steering. Since steering takes a bit, no neeed to wait for the
+ *        indication to complete.
+ */
+void _indicate_start_steering_nwk(void)
+{
+  rz_led_blink_blink_led_on(LED_BLINK_LONG_MS << 1, COMMISSIONING_STATUS_LED);
+  emberAfPluginNetworkSteeringStart();
+}
+
+void _post_indicate_start_steering_nwk(void)
+{
+  dnjcState.smState = DNJC_SM_IDLE;
+  dnjcState.smPostTransition = NULL;
 }
