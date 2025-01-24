@@ -111,6 +111,7 @@ void emberAfStackStatusCallback(EmberStatus status)
   switch (nwkState) {
     case EMBER_NO_NETWORK:
       dnjcState.leavingNwk = false; // leave has completed.
+      stopIdentifying();
       break;
     default:
       break;
@@ -345,6 +346,7 @@ void _indicate_leaving_nwk(void)
 {
   rz_led_blink_blink_led_on(LED_BLINK_LONG_MS, COMMISSIONING_STATUS_LED);
   dnjcState.smPostTransition = _post_indicate_leaving_nwk;
+  stopIdentifying();
   sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
   sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, LED_BLINK_LONG_MS);
 }
