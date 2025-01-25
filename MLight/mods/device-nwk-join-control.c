@@ -1,6 +1,5 @@
 #include "af.h"
 #include "app.h"
-#include "app_button_press.h"
 #include "device-nwk-join-control.h"
 #include "network-steering.h"
 #include "sl_zigbee_debug_print.h"
@@ -130,6 +129,8 @@ void emberAfStackStatusCallback(EmberStatus status)
  */
 void app_button_press_cb(uint8_t button, uint8_t duration)
 {
+  #define APP_BUTTON_PRESS_DURATION_LONG 2
+  #define APP_BUTTON_PRESS_DURATION_VERYLONG 2
   bool longPress = ( APP_BUTTON_PRESS_DURATION_LONG == duration )
                    || ( APP_BUTTON_PRESS_DURATION_VERYLONG == duration );
 

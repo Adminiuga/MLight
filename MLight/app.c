@@ -23,7 +23,6 @@
 #include "sl_zigbee_debug_print.h"
 #endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
 #include "app/framework/util/af-main.h"
-#include "app_button_press.h"
 #if SL_POWER_MANAGER_DEBUG == 1
 #include "sl_power_manager_debug.h"
 #endif // SL_POWER_MANAGER_DEBUG == 1
@@ -60,11 +59,11 @@ static void toggleOnoffAttribute(void);
 
 void emberAfMainTickCallback()
 {
-  app_button_press_step();
 }
 
 void dnjcButtonPressCb(uint8_t button, uint8_t duration)
 {
+  #define APP_BUTTON_PRESS_DURATION_SHORT 1
   emberAfAppPrintln("Button- %d, duration: %d", button, duration);
   if ( BUTTON0 == button
        && duration == APP_BUTTON_PRESS_DURATION_SHORT ) toggleOnoffAttribute();

@@ -30,7 +30,6 @@
 #ifdef SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
 #include "sl_mx25_flash_shutdown.h"
 #endif // SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
-#include "app_button_press.h"
 #include "light/hw_light.h"
 
 #ifdef EMBER_TEST
@@ -39,7 +38,6 @@
 
 void app_init(void)
 {
-  app_button_press_enable();
   hw_light_init();
   #ifdef SL_CATALOG_MX25_FLASH_SHUTDOWN_USART_PRESENT
   void sl_mx25_flash_shutdown();
