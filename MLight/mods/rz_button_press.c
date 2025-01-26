@@ -142,6 +142,27 @@ void rz_button_press_init(void)
   #endif
 }
 
+/**
+ * @brief get current button status
+ * @param[in] button - simple button number
+ * @return button press status
+ */
+rz_button_press_status_t rz_button_press_get_status(uint8_t button)
+{
+    return _buttons[button].status;
+}
+
+/**
+ * @brief check button press sstatus
+ * @param[in] button - simple button number
+ * @return true if the button is pressed
+ */
+bool rz_button_press_is_pressed(uint8_t button)
+{
+    return ( rz_button_press_get_status(button)
+            != RZ_BUTTON_PRESS_BUTTON_IS_RELEASED);
+}
+
 /***************************************************************************//**
  * This is a callback function that is invoked each time a GPIO interrupt
  * in one of the pushbutton inputs occurs.

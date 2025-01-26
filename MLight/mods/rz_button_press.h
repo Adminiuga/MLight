@@ -54,10 +54,16 @@ void rz_button_press_init(void);
 /**
  * @brief get current button status
  * @param[in] button - simple button number
- * @return button press status, returns only RZ_BUTTON_PRESS_BUTTON_IS_PRESSED or RZ_BUTTON_PRESS_BUTTON_IS_RELEASED
- *         or RZ_BUTTON_PRESS_BUTTON_IS_RELEASED
+ * @return button press status
  */
 rz_button_press_status_t rz_button_press_get_status(uint8_t button);
+
+/**
+ * @brief check button press sstatus
+ * @param[in] button - simple button number
+ * @return true if the button is pressed
+ */
+bool rz_button_press_is_pressed(uint8_t button);
 
 /**
  * @brief check whether the button was pressed at boot (during component initialization)
