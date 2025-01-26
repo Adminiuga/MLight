@@ -62,9 +62,55 @@ void emberAfMainTickCallback()
 {
 }
 
-void dnjcButtonPressCb(uint8_t button, uint8_t duration)
+void dnjcButtonPressCb(uint8_t button, rz_button_press_status_t duration)
 {
-  emberAfAppPrintln("Button- %d, duration: %d", button, duration);
+  sl_zigbee_app_debug_print("Button- %d, duration: ", button);
+  switch ( duration ) {
+    case RZ_BUTTON_PRESS_BUTTON_IS_RELEASED:
+      sl_zigbee_app_debug_println("is released");
+      break;
+
+    case RZ_BUTTON_PRESS_RELEASED_SHORT:
+      sl_zigbee_app_debug_println("is released after a short press");
+      break;
+
+    case RZ_BUTTON_PRESS_RELEASED_MEDIUM:
+      sl_zigbee_app_debug_println("is released after a medium press");
+      break;
+
+    case RZ_BUTTON_PRESS_RELEASED_LONG:
+      sl_zigbee_app_debug_println("is released after a long press");
+      break;
+
+    case RZ_BUTTON_PRESS_RELEASED_VERYLONG:
+      sl_zigbee_app_debug_println("is released after a very long press");
+      break;
+
+    case RZ_BUTTON_PRESS_BUTTON_IS_PRESSED:
+      sl_zigbee_app_debug_println("is pressed");
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_SHORT:
+      sl_zigbee_app_debug_println("is still pressed for short duration");
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_MEDIUM:
+      sl_zigbee_app_debug_println("is still pressed for long duration");
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_LONG:
+      sl_zigbee_app_debug_println("is still pressed for long duration");
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_VERYLONG:
+      sl_zigbee_app_debug_println("is still pressed for very long duration");
+      break;
+
+    default:
+      sl_zigbee_app_debug_println("unknown button press event")
+      break;
+  }
+
   if ( BUTTON0 == button
        && duration == RZ_BUTTON_PRESS_RELEASED_SHORT ) toggleOnoffAttribute();
 }
