@@ -187,6 +187,7 @@ void _generic_button_event_handler(uint8_t button)
   t_diff = sl_sleeptimer_tick_to_ms( sl_sleeptimer_get_tick_count() - state->ts );
   switch ( state->status ) {
     case RZ_BUTTON_PRESS_BUTTON_IS_RELEASED:
+      state->status = RZ_BUTTON_PRESS_BUTTON_IS_RELEASED;
       rz_button_press_cb(button, RZ_BUTTON_PRESS_BUTTON_IS_RELEASED);
       if ( t_diff < RZ_BUTTON_PRESS_DURATION_SHORT_MS ) {
         rz_button_press_cb(button, RZ_BUTTON_PRESS_RELEASED_SHORT);
