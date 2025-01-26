@@ -156,7 +156,6 @@ void rz_button_press_init(void)
  ******************************************************************************/
 void sl_button_on_change(const sl_button_t *handle)
 {
-  uint32_t t_diff;
   // Iterate over buttons
   for (uint8_t i = 0; i < SL_SIMPLE_BUTTON_COUNT; i++) {
     // If the handle is applicable
@@ -168,7 +167,6 @@ void sl_button_on_change(const sl_button_t *handle)
         _buttons[i].status = RZ_BUTTON_PRESS_BUTTON_IS_PRESSED;
       } else if (sl_button_get_state(handle) == SL_SIMPLE_BUTTON_RELEASED) {
         // button is released
-        _buttons[i].ts = sl_sleeptimer_get_tick_count();
         _buttons[i].status = RZ_BUTTON_PRESS_BUTTON_IS_RELEASED;
       }
       sl_zigbee_common_rtos_wakeup_stack_task();
@@ -182,8 +180,61 @@ void sl_button_on_change(const sl_button_t *handle)
 // Internal functions
 void _generic_button_event_handler(uint8_t button)
 {
+  uint32_t t_diff, nextUpdate;
   sl_zigbee_event_set_inactive( BUTTON_EVENT_X(button) );
-  sl_zigbee_app_debug_println("%d Button %d state is %d", _buttons[button].ts, button, _buttons[button].status);
+  rz_button_state_t *state = &_buttons[button];
+
+  t_diff = sl_sleeptimer_tick_to_ms( sl_sleeptimer_get_tick_count() - state->ts );
+  switch ( state->status ) {
+    case RZ_BUTTON_PRESS_BUTTON_IS_RELEASED:
+      rz_button_press_cb(button, RZ_BUTTON_PRESS_BUTTON_IS_RELEASED);
+      if ( t_diff < RZ_BUTTON_PRESS_DURATION_SHORT_MS ) {
+        rz_button_press_cb(button, RZ_BUTTON_PRESS_RELEASED_SHORT);
+      } else if ( t_diff < RZ_BUTTON_PRESS_DURATION_MEDIUM_MS ) {
+        rz_button_press_cb(button, RZ_BUTTON_PRESS_RELEASED_MEDIUM);
+      } else if ( t_diff < RZ_BUTTON_PRESS_DURATION_LONG_MS ) {
+        rz_button_press_cb(button, RZ_BUTTON_PRESS_RELEASED_LONG);
+      } else {
+        rz_button_press_cb(button, RZ_BUTTON_PRESS_RELEASED_VERYLONG);
+      }
+      break;
+
+    case RZ_BUTTON_PRESS_BUTTON_IS_PRESSED:
+      state->status = RZ_BUTTON_PRESS_STILL_PRESSED_SHORT;
+      sl_zigbee_event_set_delay_ms( &(state->event), RZ_BUTTON_PRESS_DURATION_SHORT_MS );
+      rz_button_press_cb(button, RZ_BUTTON_PRESS_BUTTON_IS_PRESSED);
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_SHORT:
+      state->status = RZ_BUTTON_PRESS_STILL_PRESSED_MEDIUM;
+      nextUpdate = RZ_BUTTON_PRESS_DURATION_LONG_MS
+          - RZ_BUTTON_PRESS_DURATION_MEDIUM_MS;
+      sl_zigbee_event_set_delay_ms( &(state->event), nextUpdate );
+      rz_button_press_cb(button, RZ_BUTTON_PRESS_STILL_PRESSED_SHORT);
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_MEDIUM:
+      state->status = RZ_BUTTON_PRESS_STILL_PRESSED_LONG;
+      nextUpdate = RZ_BUTTON_PRESS_DURATION_LONG_MS
+          - RZ_BUTTON_PRESS_DURATION_MEDIUM_MS
+          - RZ_BUTTON_PRESS_DURATION_SHORT_MS;
+      sl_zigbee_event_set_delay_ms( &(state->event), nextUpdate );
+      rz_button_press_cb(button, RZ_BUTTON_PRESS_STILL_PRESSED_MEDIUM);
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_LONG:
+      state->status = RZ_BUTTON_PRESS_STILL_PRESSED_VERYLONG;
+      sl_zigbee_event_set_delay_ms( &(state->event), RZ_BUTTON_PRESS_DURATION_LONG_MS );
+      rz_button_press_cb(button, RZ_BUTTON_PRESS_STILL_PRESSED_LONG);
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_VERYLONG:
+      rz_button_press_cb(button, RZ_BUTTON_PRESS_STILL_PRESSED_VERYLONG);
+      break;
+
+    default:
+      break;
+  }
 }
 
 // -----------------------------------------------------------------------------
