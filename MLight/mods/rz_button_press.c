@@ -43,6 +43,8 @@
 
 #define BUTTON_EVENT_X(x) (&(_buttons[x].event))
 #define BUTTON_EVENT_HANDLER_X(x) _event_handler_button_##x
+#define BUTTON_EVENT_ISR_X(x) (&(_buttons[x].isr_event))
+#define BUTTON_EVENT_ISR_HANDLER_X(x) _event_handler_isr_button_##x
 
 
 // Button state
@@ -51,6 +53,7 @@ typedef struct {
   rz_button_press_status_t status;
   uint32_t ts;
   sl_zigbee_event_t event;
+  sl_zigbee_event_t isr_event;
 } rz_button_state_t;
 
 // Button states
@@ -67,11 +70,17 @@ SL_WEAK void rz_button_press_cb(uint8_t button, rz_button_press_status_t status)
 
 //******** Forward declarations */
 static void _generic_button_event_handler(uint8_t button);
+static void _generic_button_isr_event_handler(uint8_t button);
 
 /**
  * @brief Button event handlers
  */
 #if SL_SIMPLE_BUTTON_COUNT >= 1
+static void _event_handler_isr_button_0(sl_zigbee_event_t *event)
+{
+  (void)event;
+  _generic_button_isr_event_handler(0);
+}
 static void _event_handler_button_0(sl_zigbee_event_t *event)
 {
   (void)event;
@@ -79,6 +88,11 @@ static void _event_handler_button_0(sl_zigbee_event_t *event)
 }
 #endif // SL_SIMPLE_BUTTON_COUNT >= 1
 #if SL_SIMPLE_BUTTON_COUNT >= 2
+static void _event_handler_isr_button_1(sl_zigbee_event_t *event)
+{
+  (void)event;
+  _generic_button_isr_event_handler(1);
+}
 static void _event_handler_button_1(sl_zigbee_event_t *event)
 {
   (void)event;
@@ -86,6 +100,11 @@ static void _event_handler_button_1(sl_zigbee_event_t *event)
 }
 #endif // SL_SIMPLE_BUTTON_COUNT >= 2
 #if SL_SIMPLE_BUTTON_COUNT >= 3
+static void _event_handler_isr_button_2(sl_zigbee_event_t *event)
+{
+  (void)event;
+  _generic_button_isr_event_handler(2);
+}
 static void _event_handler_button_2(sl_zigbee_event_t *event)
 {
   (void)event;
@@ -93,6 +112,11 @@ static void _event_handler_button_2(sl_zigbee_event_t *event)
 }
 #endif // SL_SIMPLE_BUTTON_COUNT >= 3
 #if SL_SIMPLE_BUTTON_COUNT >= 4
+static void _event_handler_isr_button_3(sl_zigbee_event_t *event)
+{
+  (void)event;
+  _generic_button_isr_event_handler(3);
+}
 static void _event_handler_button_3(sl_zigbee_event_t *event)
 {
   (void)event;
@@ -100,6 +124,11 @@ static void _event_handler_button_3(sl_zigbee_event_t *event)
 }
 #endif // SL_SIMPLE_BUTTON_COUNT >= 4
 #if SL_SIMPLE_BUTTON_COUNT >= 5
+static void _event_handler_isr_button_4(sl_zigbee_event_t *event)
+{
+  (void)event;
+  _generic_button_isr_event_handler(4);
+}
 static void _event_handler_button_4(sl_zigbee_event_t *event)
 {
   (void)event;
@@ -126,19 +155,24 @@ void rz_button_press_init(void)
     _buttons[i].ts = 0;
   }
   #if SL_SIMPLE_BUTTON_COUNT >= 1
-  sl_zigbee_af_isr_event_init( BUTTON_EVENT_X(0), BUTTON_EVENT_HANDLER_X(0) );
+  sl_zigbee_af_isr_event_init( BUTTON_EVENT_ISR_X(0), BUTTON_EVENT_ISR_HANDLER_X(0) );
+  sl_zigbee_event_init( BUTTON_EVENT_X(0), BUTTON_EVENT_HANDLER_X(0) );
   #endif
   #if SL_SIMPLE_BUTTON_COUNT >= 2
-  sl_zigbee_af_isr_event_init( BUTTON_EVENT_X(1), BUTTON_EVENT_HANDLER_X(1) );
+  sl_zigbee_af_isr_event_init( BUTTON_EVENT_ISR_X(1), BUTTON_EVENT_ISR_HANDLER_X(1) );
+  sl_zigbee_event_init( BUTTON_EVENT_X(1), BUTTON_EVENT_ISR_HANDLER_X(1) );
   #endif
   #if SL_SIMPLE_BUTTON_COUNT >= 3
-  sl_zigbee_af_isr_event_init( BUTTON_EVENT_X(2), BUTTON_EVENT_HANDLER_X(2) );
+  sl_zigbee_af_isr_event_init( BUTTON_EVENT_ISR_X(2), BUTTON_EVENT_ISR_HANDLER_X(2) );
+  sl_zigbee_event_init( BUTTON_EVENT_X(2), BUTTON_EVENT_ISR_HANDLER_X(2) );
   #endif
   #if SL_SIMPLE_BUTTON_COUNT >= 4
-  sl_zigbee_af_isr_event_init( BUTTON_EVENT_X(3), BUTTON_EVENT_HANDLER_X(3) );
+  sl_zigbee_af_isr_event_init( BUTTON_EVENT_ISR_X(3), BUTTON_EVENT_ISR_HANDLER_X(3) );
+  sl_zigbee_event_init( BUTTON_EVENT_X(3), BUTTON_EVENT_ISR_HANDLER_X(3) );
   #endif
   #if SL_SIMPLE_BUTTON_COUNT >= 5
-  sl_zigbee_af_isr_event_init( BUTTON_EVENT_X(4), BUTTON_EVENT_HANDLER_X(4) );
+  sl_zigbee_af_isr_event_init( BUTTON_EVENT_ISR_X(4), BUTTON_EVENT_ISR_HANDLER_X(4) );
+  sl_zigbee_event_init( BUTTON_EVENT_X(4), BUTTON_EVENT_ISR_HANDLER_X(4) );
   #endif
 }
 
@@ -191,7 +225,7 @@ void sl_button_on_change(const sl_button_t *handle)
         _buttons[i].status = RZ_BUTTON_PRESS_BUTTON_IS_RELEASED;
       }
       sl_zigbee_common_rtos_wakeup_stack_task();
-      sl_zigbee_event_set_active( BUTTON_EVENT_X(i) );
+      sl_zigbee_event_set_active( BUTTON_EVENT_ISR_X(i) );
       break;
     }
   }
@@ -199,16 +233,22 @@ void sl_button_on_change(const sl_button_t *handle)
 
 // ---------------------
 // Internal functions
-void _generic_button_event_handler(uint8_t button)
+
+/**
+ * @brief Button ISR event handler. This event is activated from the ISR context.
+ *        and may schedule non-ISR event for button still pressed event updates.
+ */
+void _generic_button_isr_event_handler(uint8_t button)
 {
-  uint32_t t_diff, nextUpdate;
-  sl_zigbee_event_set_inactive( BUTTON_EVENT_X(button) );
+  uint32_t t_diff;
+  sl_zigbee_event_set_inactive( BUTTON_EVENT_ISR_X(button) );
   rz_button_state_t *state = &_buttons[button];
 
   t_diff = sl_sleeptimer_tick_to_ms( sl_sleeptimer_get_tick_count() - state->ts );
   switch ( state->status ) {
     case RZ_BUTTON_PRESS_BUTTON_IS_RELEASED:
       state->status = RZ_BUTTON_PRESS_BUTTON_IS_RELEASED;
+      sl_zigbee_event_set_inactive( &state->event );
       rz_button_press_cb(button, RZ_BUTTON_PRESS_BUTTON_IS_RELEASED);
       if ( t_diff < RZ_BUTTON_PRESS_DURATION_SHORT_MS ) {
         rz_button_press_cb(button, RZ_BUTTON_PRESS_RELEASED_SHORT);
@@ -223,10 +263,22 @@ void _generic_button_event_handler(uint8_t button)
 
     case RZ_BUTTON_PRESS_BUTTON_IS_PRESSED:
       state->status = RZ_BUTTON_PRESS_STILL_PRESSED_SHORT;
-      sl_zigbee_event_set_delay_ms( &(state->event), RZ_BUTTON_PRESS_DURATION_SHORT_MS );
+      sl_zigbee_event_set_delay_ms( &state->event, RZ_BUTTON_PRESS_DURATION_SHORT_MS );
       rz_button_press_cb(button, RZ_BUTTON_PRESS_BUTTON_IS_PRESSED);
       break;
 
+    default:
+      break;
+  }
+}
+
+void _generic_button_event_handler(uint8_t button)
+{
+  uint32_t nextUpdate;
+  sl_zigbee_event_set_inactive( BUTTON_EVENT_X(button) );
+  rz_button_state_t *state = &_buttons[button];
+
+  switch ( state->status ) {
     case RZ_BUTTON_PRESS_STILL_PRESSED_SHORT:
       state->status = RZ_BUTTON_PRESS_STILL_PRESSED_MEDIUM;
       nextUpdate = RZ_BUTTON_PRESS_DURATION_LONG_MS
@@ -255,6 +307,7 @@ void _generic_button_event_handler(uint8_t button)
       break;
 
     default:
+      sl_zigbee_app_debug_println("Invalid button state %d for non-isr event handler", state->status);
       break;
   }
 }
