@@ -3,6 +3,7 @@
 #include "device-nwk-join-control.h"
 #include "network-steering.h"
 #include "sl_zigbee_debug_print.h"
+#include "rz_button_press.h"
 
 #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
 #include "rz_led_blink.h"
@@ -125,14 +126,12 @@ void emberAfStackStatusCallback(EmberStatus status)
 
 
 /**
- * @brief app_button_press callback
+ * @brief rz_button_press callback
  */
-void app_button_press_cb(uint8_t button, uint8_t duration)
+void rz_button_press_cb(uint8_t button, uint8_t duration)
 {
-  #define APP_BUTTON_PRESS_DURATION_LONG 2
-  #define APP_BUTTON_PRESS_DURATION_VERYLONG 2
-  bool longPress = ( APP_BUTTON_PRESS_DURATION_LONG == duration )
-                   || ( APP_BUTTON_PRESS_DURATION_VERYLONG == duration );
+  bool longPress = ( RZ_BUTTON_PRESS_RELEASED_LONG == duration )
+                   || ( RZ_BUTTON_PRESS_RELEASED_VERYLONG == duration );
 
   if ( BUTTON0 == button
        && !(dnjcState.leavingNwk)) // Ignore button events while leaving.

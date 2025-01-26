@@ -38,6 +38,7 @@
 
 #include "app.h"
 #include "light/logical_light.h"
+#include "mods/rz_button_press.h"
 
 #include "sl_dmp_ui_stub.h"
 
@@ -63,10 +64,9 @@ void emberAfMainTickCallback()
 
 void dnjcButtonPressCb(uint8_t button, uint8_t duration)
 {
-  #define APP_BUTTON_PRESS_DURATION_SHORT 1
   emberAfAppPrintln("Button- %d, duration: %d", button, duration);
   if ( BUTTON0 == button
-       && duration == APP_BUTTON_PRESS_DURATION_SHORT ) toggleOnoffAttribute();
+       && duration == RZ_BUTTON_PRESS_RELEASED_SHORT ) toggleOnoffAttribute();
 }
 
 /**
@@ -336,4 +336,3 @@ static void setDefaultReportEntry(void)
   reportingEntry.data.reported.reportableChange = 0; // onoff is bool type so it is unused
   emberAfPluginReportingConfigureReportedAttribute(&reportingEntry);
 }
-
