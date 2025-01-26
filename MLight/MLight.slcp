@@ -7,7 +7,6 @@ description: This is a sample application demonstrating a sleepy light applicati
 author: Silicon Laboratories, Inc.
 
 component:
-  - id: app_button_press
   - id: cli
     instance:
       - example
@@ -206,6 +205,8 @@ source:
   - path: app.c
   - path: mods/device-nwk-join-control.h
   - path: mods/device-nwk-join-control.c
+  - path: mods/rz_button_press.h
+  - path: mods/rz_button_press.c
   - path: light/hw_light.h
   - path: light/hw_light.c
   - path: light/logical_light.h
@@ -229,6 +230,8 @@ config_file:
       - brd4181b
       - simple_rgb_pwm_led
     path: template/brd4181b/sl_simple_rgb_pwm_led_rgb_led0_config.h
+  - path: template/rz_button_press_config.h
+    file_id: rz_button_press_configuration_file_id
 
 include:
   - path: ./
