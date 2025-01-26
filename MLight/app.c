@@ -72,6 +72,11 @@ void dnjcButtonPressCb(uint8_t button, rz_button_press_status_t duration)
 
     case RZ_BUTTON_PRESS_RELEASED_SHORT:
       sl_zigbee_app_debug_println("is released after a short press");
+      if ( BUTTON0 == button ) {
+         emberAfOnOffClusterSetValueCallback(emberAfPrimaryEndpoint(),
+                                             ZCL_TOGGLE_COMMAND_ID,
+                                             0);
+      }
       break;
 
     case RZ_BUTTON_PRESS_RELEASED_MEDIUM:
@@ -107,12 +112,9 @@ void dnjcButtonPressCb(uint8_t button, rz_button_press_status_t duration)
       break;
 
     default:
-      sl_zigbee_app_debug_println("unknown button press event")
+      sl_zigbee_app_debug_println("unknown button press event");
       break;
   }
-
-  if ( BUTTON0 == button
-       && duration == RZ_BUTTON_PRESS_RELEASED_SHORT ) toggleOnoffAttribute();
 }
 
 /**
