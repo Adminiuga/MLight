@@ -110,6 +110,7 @@ void emberAfStackStatusCallback(EmberStatus status)
 
   switch (nwkState) {
     case EMBER_NO_NETWORK:
+    case EMBER_JOINED_NETWORK_NO_PARENT:
       // Keep trying finding the network
       sl_zigbee_event_set_inactive( &dnjcState.dnjcEvent );
       dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
