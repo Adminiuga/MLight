@@ -56,7 +56,6 @@ static bool identifying = false;
 // Forward declarations
 
 static void setDefaultReportEntry(void);
-static void toggleOnoffAttribute(void);
 
 void emberAfMainTickCallback()
 {
@@ -330,45 +329,6 @@ void emberAfRadioNeedsCalibratingCallback(void)
 
 //-----------------
 // Static functions
-
-static EmberEUI64 lightEUI;
-static void toggleOnoffAttribute(void)
-{
-  EmberStatus status;
-  uint8_t data;
-  status = emberAfReadAttribute(emberAfPrimaryEndpoint(),
-                                ZCL_ON_OFF_CLUSTER_ID,
-                                ZCL_ON_OFF_ATTRIBUTE_ID,
-                                CLUSTER_MASK_SERVER,
-                                (int8u*) &data,
-                                sizeof(data),
-                                NULL);
-
-  if (status == EMBER_ZCL_STATUS_SUCCESS) {
-    if (data == 0x00) {
-      data = 0x01;
-    } else {
-      data = 0x00;
-    }
-
-    sl_dmp_ui_set_light_direction(DMP_UI_DIRECTION_SWITCH);
-    emberAfGetEui64(lightEUI);
-#ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
-    zb_ble_dmp_set_source_address(lightEUI);
-#endif
-  } else {
-    emberAfAppPrintln("read onoff attr: 0x%x", status);
-  }
-
-  status = emberAfWriteAttribute(emberAfPrimaryEndpoint(),
-                                 ZCL_ON_OFF_CLUSTER_ID,
-                                 ZCL_ON_OFF_ATTRIBUTE_ID,
-                                 CLUSTER_MASK_SERVER,
-                                 (int8u *) &data,
-                                 ZCL_BOOLEAN_ATTRIBUTE_TYPE);
-  emberAfAppPrintln("write 0x%x to onoff attr: 0x%x", data, status);
-}
-
 static void setDefaultReportEntry(void)
 {
   EmberAfPluginReportingEntry reportingEntry;
