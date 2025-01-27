@@ -15,7 +15,10 @@ component:
       - rgb_led0
   - id: iostream_recommended_stream
   - id: zigbee_debug_print
+  - id: zigbee_r23_support
   - id: zigbee_pro_leaf_stack
+  - id: zigbee_end_device_support
+    condition: [ zigbee_pro_leaf_stack ]
   - id: zigbee_source_route
   - id: bluetooth_stack
   - id: gatt_configuration
@@ -65,7 +68,6 @@ component:
   - id: zigbee_zll_scenes_server
   - id: zigbee_basic
   - id: zigbee_scan_dispatch
-  - id: zigbee_end_device_support
   - id: zigbee_ble_event_handler
   - id: zigbee_ble_dmp_cli
   - id: zigbee_application_bootloader
@@ -92,6 +94,16 @@ configuration:
     value: 16
   - name: SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE
     value: SLI_ZIGBEE_NETWORK_DEVICE_TYPE_SLEEPY_END_DEVICE
+    condition: [ zigbee_pro_leaf_stack ]
+  - name: SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE
+    value: SLI_ZIGBEE_NETWORK_DEVICE_TYPE_ROUTER
+    condition: [ zigbee_pro_router_stack ]
+  - name: EMBER_SOURCE_ROUTE_TABLE_SIZE
+    value: 16
+    condition: [ zigbee_pro_router_stack ]
+  - name: EMBER_MAX_END_DEVICE_CHILDREN
+    value: 12
+    condition: [ zigbee_pro_router_stack ]
   - name: SLI_ZIGBEE_PRIMARY_NETWORK_SECURITY_TYPE
     value: SLI_ZIGBEE_NETWORK_SECURITY_TYPE_3_0
   - name: SL_ZIGBEE_APP_FRAMEWORK_BACKOFF_SLEEP_MS
