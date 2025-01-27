@@ -23,7 +23,6 @@
 #include "sl_zigbee_debug_print.h"
 #endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
 #include "app/framework/util/af-main.h"
-#include "app_button_press.h"
 #if SL_POWER_MANAGER_DEBUG == 1
 #include "sl_power_manager_debug.h"
 #endif // SL_POWER_MANAGER_DEBUG == 1
@@ -39,6 +38,7 @@
 
 #include "app.h"
 #include "light/logical_light.h"
+#include "mods/rz_button_press.h"
 
 #include "sl_dmp_ui_stub.h"
 
@@ -56,18 +56,64 @@ static bool identifying = false;
 // Forward declarations
 
 static void setDefaultReportEntry(void);
-static void toggleOnoffAttribute(void);
 
 void emberAfMainTickCallback()
 {
-  app_button_press_step();
 }
 
-void dnjcButtonPressCb(uint8_t button, uint8_t duration)
+void dnjcButtonPressCb(uint8_t button, rz_button_press_status_t duration)
 {
-  emberAfAppPrintln("Button- %d, duration: %d", button, duration);
-  if ( BUTTON0 == button
-       && duration == APP_BUTTON_PRESS_DURATION_SHORT ) toggleOnoffAttribute();
+  sl_zigbee_app_debug_print("Button- %d, duration: ", button);
+  switch ( duration ) {
+    case RZ_BUTTON_PRESS_BUTTON_IS_RELEASED:
+      sl_zigbee_app_debug_println("is released");
+      break;
+
+    case RZ_BUTTON_PRESS_RELEASED_SHORT:
+      sl_zigbee_app_debug_println("is released after a short press");
+      if ( BUTTON0 == button ) {
+         emberAfOnOffClusterSetValueCallback(emberAfPrimaryEndpoint(),
+                                             ZCL_TOGGLE_COMMAND_ID,
+                                             0);
+      }
+      break;
+
+    case RZ_BUTTON_PRESS_RELEASED_MEDIUM:
+      sl_zigbee_app_debug_println("is released after a medium press");
+      break;
+
+    case RZ_BUTTON_PRESS_RELEASED_LONG:
+      sl_zigbee_app_debug_println("is released after a long press");
+      break;
+
+    case RZ_BUTTON_PRESS_RELEASED_VERYLONG:
+      sl_zigbee_app_debug_println("is released after a very long press");
+      break;
+
+    case RZ_BUTTON_PRESS_BUTTON_IS_PRESSED:
+      sl_zigbee_app_debug_println("is pressed");
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_SHORT:
+      sl_zigbee_app_debug_println("is still pressed for short duration");
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_MEDIUM:
+      sl_zigbee_app_debug_println("is still pressed for long duration");
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_LONG:
+      sl_zigbee_app_debug_println("is still pressed for long duration");
+      break;
+
+    case RZ_BUTTON_PRESS_STILL_PRESSED_VERYLONG:
+      sl_zigbee_app_debug_println("is still pressed for very long duration");
+      break;
+
+    default:
+      sl_zigbee_app_debug_println("unknown button press event");
+      break;
+  }
 }
 
 /**
@@ -97,6 +143,7 @@ void emberAfMainInitCallback(void)
   sl_power_manager_debug_print_em_requirements();
   #endif // SL_POWER_MANAGER_DEBUG == 1
   dnjcInit();
+  rz_button_press_init();
 }
 
 /** @brief Start feedback.
@@ -282,45 +329,6 @@ void emberAfRadioNeedsCalibratingCallback(void)
 
 //-----------------
 // Static functions
-
-static EmberEUI64 lightEUI;
-static void toggleOnoffAttribute(void)
-{
-  EmberStatus status;
-  uint8_t data;
-  status = emberAfReadAttribute(emberAfPrimaryEndpoint(),
-                                ZCL_ON_OFF_CLUSTER_ID,
-                                ZCL_ON_OFF_ATTRIBUTE_ID,
-                                CLUSTER_MASK_SERVER,
-                                (int8u*) &data,
-                                sizeof(data),
-                                NULL);
-
-  if (status == EMBER_ZCL_STATUS_SUCCESS) {
-    if (data == 0x00) {
-      data = 0x01;
-    } else {
-      data = 0x00;
-    }
-
-    sl_dmp_ui_set_light_direction(DMP_UI_DIRECTION_SWITCH);
-    emberAfGetEui64(lightEUI);
-#ifdef SL_CATALOG_ZIGBEE_BLE_EVENT_HANDLER_PRESENT
-    zb_ble_dmp_set_source_address(lightEUI);
-#endif
-  } else {
-    emberAfAppPrintln("read onoff attr: 0x%x", status);
-  }
-
-  status = emberAfWriteAttribute(emberAfPrimaryEndpoint(),
-                                 ZCL_ON_OFF_CLUSTER_ID,
-                                 ZCL_ON_OFF_ATTRIBUTE_ID,
-                                 CLUSTER_MASK_SERVER,
-                                 (int8u *) &data,
-                                 ZCL_BOOLEAN_ATTRIBUTE_TYPE);
-  emberAfAppPrintln("write 0x%x to onoff attr: 0x%x", data, status);
-}
-
 static void setDefaultReportEntry(void)
 {
   EmberAfPluginReportingEntry reportingEntry;
@@ -336,4 +344,3 @@ static void setDefaultReportEntry(void)
   reportingEntry.data.reported.reportableChange = 0; // onoff is bool type so it is unused
   emberAfPluginReportingConfigureReportedAttribute(&reportingEntry);
 }
-

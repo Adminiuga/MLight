@@ -1,9 +1,9 @@
 #include "af.h"
 #include "app.h"
-#include "app_button_press.h"
 #include "device-nwk-join-control.h"
 #include "network-steering.h"
 #include "sl_zigbee_debug_print.h"
+#include "rz_button_press.h"
 
 #if defined(SL_CATALOG_RZ_LED_BLINK_PRESENT)
 #include "rz_led_blink.h"
@@ -126,38 +126,48 @@ void emberAfStackStatusCallback(EmberStatus status)
 
 
 /**
- * @brief app_button_press callback
+ * @brief rz_button_press callback
  */
-void app_button_press_cb(uint8_t button, uint8_t duration)
+void rz_button_press_cb(uint8_t button, uint8_t duration)
 {
-  bool longPress = ( APP_BUTTON_PRESS_DURATION_LONG == duration )
-                   || ( APP_BUTTON_PRESS_DURATION_VERYLONG == duration );
+  EmberNetworkStatus state;
+  if ( BUTTON0 != button
+       || dnjcState.leavingNwk ) {
+    // Ignore button events while leaving.
+    goto END;
+  }
 
-  if ( BUTTON0 == button
-       && !(dnjcState.leavingNwk)) // Ignore button events while leaving.
-  {
-    EmberNetworkStatus state = dnjcIndicateNetworkState();
-    if (state == EMBER_NO_NETWORK) {
-      // no network, short or long press -> reset attempt count, start network steering
+  state = emberAfNetworkState();
+  if ( RZ_BUTTON_PRESS_STILL_PRESSED_VERYLONG == duration ) {
+    // Special case: very long press.
+    if ( EMBER_JOINED_NETWORK == state ) {
+      // very long press on network -> leave network
+      sl_zigbee_app_debug_println("Button long press - Leave Nwk");
+      _indicate_leaving_nwk();
+    } else {
+      sl_zigbee_app_debug_println("Ignoring button long press, since there's no network");
+    }
+    goto END;
+  }
+
+  // short button presses and releases are for light control
+  // and LONG_STILL_PRESSED is reserved for network leave
+  // therefore handle here only Medium and LONG button releases
+  if ( RZ_BUTTON_PRESS_RELEASED_MEDIUM == duration
+       || RZ_BUTTON_PRESS_RELEASED_LONG == duration ) {
+    
+    state = dnjcIndicateNetworkState();
+    if ( EMBER_NO_NETWORK == state
+         || EMBER_JOINED_NETWORK_NO_PARENT == state ) {
       dnjcState.joinAttempt = 0;
       dnjcState.isCurrentlySteering = true;
       emberAfPluginNetworkSteeringStart();
-    } else {
-      // there's network, short or long press
-      if (longPress) {
-        // network & long press -> leave network
-        sl_zigbee_app_debug_println("Button- Leave Nwk");
-        _indicate_leaving_nwk();
-      } else {
-        // has network, short press 
-        if (state == EMBER_JOINED_NETWORK) {
-          sl_zigbee_app_debug_println("Button- Identify start");
-          startIdentifying();
-        }
-      }
+    } else if ( EMBER_JOINED_NETWORK ) {
+      startIdentifying();
     }
   }
 
+END:
   dnjcButtonPressCb(button, duration);
 }
 
@@ -349,6 +359,7 @@ void _event_state_indicate_startup_nwk(void)
 void _indicate_leaving_nwk(void)
 {
   rz_led_blink_blink_led_on(LED_BLINK_LONG_MS, COMMISSIONING_STATUS_LED);
+  dnjcState.leavingNwk = true;
   dnjcState.smPostTransition = _post_indicate_leaving_nwk;
   stopIdentifying();
   sl_zigbee_event_set_inactive(&dnjcState.dnjcEvent);
