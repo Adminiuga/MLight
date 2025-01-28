@@ -227,8 +227,26 @@ void emberAfPluginNetworkSteeringCompleteCallback(EmberStatus status,
  */
 EmberNetworkStatus dnjcInit(void)
 {
+  tokTypeStackNodeData networkData;
+
   if ( ! dnjcState.isInitialized ) {
     dnjcState.isInitialized = true;
+  
+    memset(&networkData, 0xFF, sizeof(networkData));
+    halCommonGetToken(&networkData, TOKEN_STACK_NODE_DATA);
+    sl_zigbee_app_debug_println(
+        "Network token node type: 0x%02x, Firmware note type: 0x%02x",
+        networkData.nodeType,
+        SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE
+    );
+    if ( networkData.nodeType && networkData.nodeType
+         != SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE
+         && networkData.nodeType < SLI_ZIGBEE_NETWORK_DEVICE_TYPE_END_DEVICE
+         && SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE < SLI_ZIGBEE_NETWORK_DEVICE_TYPE_END_DEVICE ) {
+      // nodeType is set, so it is joined the network.
+      // Check if we need to leave the network: stay only if SED or ED
+        _post_indicate_leaving_nwk();
+    }
     sl_zigbee_event_init(&dnjcState.dnjcEvent, _event_handler);
     sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS);
     dnjcState.smPostTransition = _event_state_indicate_startup_nwk;
