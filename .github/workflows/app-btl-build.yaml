@@ -67,7 +67,7 @@ jobs:
           - name_suffix: sed
             image_id_subtype: 0
             without: >-
-              debug_swo
+              debug_swo,
               zigbee_debug_basic,
               zigbee_debug_extended
             configuration: >-
@@ -80,7 +80,7 @@ jobs:
           - name_suffix: end-device
             image_id_subtype: 1
             without: >-
-              debug_swo
+              debug_swo,
               zigbee_debug_basic,
               zigbee_debug_extended
             configuration: >-
@@ -146,7 +146,7 @@ jobs:
           - name_suffix: sed
             image_id_subtype: 0
             without: >-
-              debug_swo
+              debug_swo,
               zigbee_debug_basic,
               zigbee_debug_extended
             configuration: >-
@@ -159,7 +159,7 @@ jobs:
           - name_suffix: end-device
             image_id_subtype: 1
             without: >-
-              debug_swo
+              debug_swo,
               zigbee_debug_basic,
               zigbee_debug_extended
             configuration: >-

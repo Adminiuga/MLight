@@ -15,6 +15,7 @@ component:
       - rgb_led0
   - id: iostream_recommended_stream
   - id: zigbee_debug_print
+  - id: zigbee_debug_extended
   - id: zigbee_r23_support
   - id: zigbee_pro_leaf_stack
   - id: zigbee_end_device_support
