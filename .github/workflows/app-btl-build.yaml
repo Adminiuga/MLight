@@ -67,7 +67,9 @@ jobs:
           - name_suffix: sed
             image_id_subtype: 0
             without: >-
-              debug_swo
+              debug_swo,
+              zigbee_debug_basic,
+              zigbee_debug_extended
             configuration: >-
               SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_SLEEPY_END_DEVICE,
               SL_ZIGBEE_DEBUG_STACK_GROUP_RUNTIME_DEFAULT:0,
@@ -78,9 +80,26 @@ jobs:
           - name_suffix: end-device
             image_id_subtype: 1
             without: >-
-              debug_swo
+              debug_swo,
+              zigbee_debug_basic,
+              zigbee_debug_extended
             configuration: >-
               SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_END_DEVICE,
+              SL_ZIGBEE_DEBUG_STACK_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_CORE_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_APP_GROUP_RUNTIME_DEFAULT:0,
+
+          - name_suffix: router
+            image_id_subtype: 2
+            with: >-
+              zigbee_pro_router_stack
+            without: >-
+              debug_swo,
+              zigbee_debug_basic,
+              zigbee_debug_extended,
+              zigbee_pro_leaf_stack
+            configuration: >-
+              SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_ROUTER,
               SL_ZIGBEE_DEBUG_STACK_GROUP_RUNTIME_DEFAULT:0,
               SL_ZIGBEE_DEBUG_CORE_GROUP_RUNTIME_DEFAULT:0,
               SL_ZIGBEE_DEBUG_APP_GROUP_RUNTIME_DEFAULT:0,
@@ -88,6 +107,8 @@ jobs:
 
           - name_suffix: debug
             image_id_subtype: 7
+            with: >-
+              zigbee_debug_extended
             configuration: >-
               SL_IOSTREAM_USART_VCOM_RESTRICT_ENERGY_MODE_TO_ALLOW_RECEPTION:1
 
@@ -98,7 +119,9 @@ jobs:
       model: MLight${{ inputs.flavor != '' && format('-{0}', inputs.flavor) || '' }}
       project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
       device: ${{ inputs.device }}
-      components: ${{ inputs.components }}
+      components: >-
+        ${{ inputs.components }}
+        ${{ matrix.with != '' && format(', {0}', matrix.with) || '' }}
       configuration: >-
         ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
         ${{ matrix.configuration != '' && format('{0},', matrix.configuration) || '' }}
@@ -123,7 +146,9 @@ jobs:
           - name_suffix: sed
             image_id_subtype: 0
             without: >-
-              debug_swo
+              debug_swo,
+              zigbee_debug_basic,
+              zigbee_debug_extended
             configuration: >-
               SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_SLEEPY_END_DEVICE,
               SL_ZIGBEE_DEBUG_STACK_GROUP_RUNTIME_DEFAULT:0,
@@ -134,7 +159,9 @@ jobs:
           - name_suffix: end-device
             image_id_subtype: 1
             without: >-
-              debug_swo
+              debug_swo,
+              zigbee_debug_basic,
+              zigbee_debug_extended
             configuration: >-
               SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_END_DEVICE,
               SL_ZIGBEE_DEBUG_STACK_GROUP_RUNTIME_DEFAULT:0,
@@ -142,8 +169,25 @@ jobs:
               SL_ZIGBEE_DEBUG_APP_GROUP_RUNTIME_DEFAULT:0,
               SL_ZIGBEE_DEBUG_ZCL_GROUP_RUNTIME_DEFAULT:0
 
+          - name_suffix: router
+            image_id_subtype: 2
+            with: >-
+              zigbee_pro_router_stack
+            without: >-
+              debug_swo,
+              zigbee_debug_basic,
+              zigbee_debug_extended,
+              zigbee_pro_leaf_stack
+            configuration: >-
+              SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE:SLI_ZIGBEE_NETWORK_DEVICE_TYPE_ROUTER,
+              SL_ZIGBEE_DEBUG_STACK_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_CORE_GROUP_RUNTIME_DEFAULT:0,
+              SL_ZIGBEE_DEBUG_APP_GROUP_RUNTIME_DEFAULT:0,
+
           - name_suffix: debug
             image_id_subtype: 7
+            with: >-
+              zigbee_debug_extended
             configuration: >-
               SL_IOSTREAM_USART_VCOM_RESTRICT_ENERGY_MODE_TO_ALLOW_RECEPTION:1
 
@@ -154,7 +198,9 @@ jobs:
       model: MLight${{ inputs.flavor != '' && format('-{0}', inputs.flavor) || '' }}
       project_name: MLight-${{ inputs.flavor }}-${{ matrix.name_suffix }}
       device: ${{ inputs.device }}
-      components: ${{ inputs.components }}
+      components: >-
+        ${{ inputs.components }}
+        ${{ matrix.with != '' && format(', {0}', matrix.with) || '' }}
       configuration: >-
         ${{ inputs.configuration != '' && format('{0},', inputs.configuration) || '' }}
         ${{ matrix.configuration != '' && format('{0},', matrix.configuration) || '' }}
