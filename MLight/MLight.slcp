@@ -23,8 +23,6 @@ component:
   - id: zigbee_end_device_support
     condition: [ zigbee_pro_leaf_stack ]
   - id: zigbee_source_route
-  - id: zigbee_enhanced_routing
-    condition: [ zigbee_pro_router_stack, zigbee_r23_support ]
   - id: bluetooth_stack
   - id: gatt_configuration
   - id: bluetooth_feature_system
@@ -269,6 +267,11 @@ config_file:
       component: sl_battery_monitor
       file_id: sl_battery_monitor_config
     path: template/brd_mgm210_expansion/sl_battery_monitor_config.h
+    condition: [ sl_battery_monitor, brd_mgm210_expansion ]
+  - override:
+      component: power_configuration_server
+      file_id: power_configuration_server
+    path: template/brd_mgm210_expansion/power_configuration_server_config.h
     condition: [ sl_battery_monitor, brd_mgm210_expansion ]
 
 include:
