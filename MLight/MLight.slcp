@@ -13,7 +13,9 @@ component:
   - id: simple_rgb_pwm_led
     instance:
       - rgb_led0
-  - id: iostream_recommended_stream
+  - id: iostream_usart
+    instance:
+      - vcom
   - id: zigbee_debug_print
   - id: zigbee_debug_extended
   - id: zigbee_r23_support
