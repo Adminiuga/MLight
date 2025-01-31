@@ -258,21 +258,21 @@ config_file:
     path: template/brd4181b/sl_simple_rgb_pwm_led_rgb_led0_config.h
   - path: template/rz_button_press_config.h
     file_id: rz_button_press_configuration_file_id
-  - override:
-      component: sl_battery_monitor
+  - path: template/tbs2/sl_battery_monitor_config.h
+    override:
+      component: "%extension-raz1_custom_components%sl_battery_monitor_v2"
       file_id: sl_battery_monitor_config
-    path: template/tbs2/sl_battery_monitor_config.h
     condition: [ sl_battery_monitor, efr32mg12p332f1024gl125 ]
-  - override:
-      component: sl_battery_monitor
+  - path: template/brd_mgm210_expansion/sl_battery_monitor_config.h
+    override:
+      component: "%extension-raz1_custom_components%sl_battery_monitor_v2"
       file_id: sl_battery_monitor_config
-    path: template/brd_mgm210_expansion/sl_battery_monitor_config.h
-    condition: [ sl_battery_monitor, brd_mgm210_expansion ]
-  - override:
-      component: power_configuration_server
+    condition: [ sl_battery_monitor, mgm210la22jif ]
+  - path: template/brd_mgm210_expansion/power_configuration_server_config.h
+    override:
+      component: "%extension-raz1_custom_components%power_configuration_server"
       file_id: power_configuration_server
-    path: template/brd_mgm210_expansion/power_configuration_server_config.h
-    condition: [ sl_battery_monitor, brd_mgm210_expansion ]
+    condition: [ sl_battery_monitor, mgm210la22jif ]
 
 include:
   - path: ./
