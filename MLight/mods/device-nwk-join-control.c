@@ -356,10 +356,7 @@ void _event_state_indicate_startup_nwk(void)
 
   EmberNetworkStatus nwkState = dnjcIndicateNetworkState();
 
-  if ( EMBER_JOINED_NETWORK == nwkState
-       || EMBER_JOINED_NETWORK_NO_PARENT == nwkState ) {
-    sl_zigbee_app_debug_println("%d dnjc startup: may have network, give it some time", TIMESTAMP_MS);
-  } else {
+  if ( EMBER_JOINED_NETWORK != nwkState ) {
     // should not be leaving, but if we are, then reschedule
     if ( dnjcState.leavingNwk ) {
       sl_zigbee_event_set_delay_ms(&dnjcState.dnjcEvent, DNJC_STARTUP_STATUS_DELAY_MS >> 1);
