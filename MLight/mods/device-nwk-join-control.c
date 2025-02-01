@@ -15,6 +15,10 @@
 #define rz_led_blink_pattern(count, length, pattern, ledIndex)
 #endif // SL_CATALOG_RZ_LED_BLINK_PRESENT
 
+#ifndef ZDO_POWER_DESCRIPTOR
+#define ZDO_POWER_DESCRIPTOR 0x0220
+#endif  // ZDO_POWER_DESCRIPTOR
+
 #define LED_BLINK_SHORT_MS         100
 #define LED_BLINK_LONG_MS          750
 #define LED_BLINK_IDENTIFY_MS      500
@@ -121,6 +125,11 @@ void emberAfStackStatusCallback(EmberStatus status)
     default:
       break;
   }
+#if SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE == SLI_ZIGBEE_NETWORK_DEVICE_TYPE_END_DEVICE
+  if ( EMBER_NETWORK_UP == status ) {
+    emberSetPowerDescriptor(ZDO_POWER_DESCRIPTOR);
+  }
+#endif // SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE == SLI_ZIGBEE_NETWORK_DEVICE_TYPE_END_DEVICE
 
   dnjcStackStatusCb(status);
 }
