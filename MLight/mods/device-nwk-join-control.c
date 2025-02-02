@@ -18,6 +18,9 @@
 #ifndef ZDO_POWER_DESCRIPTOR
 #define ZDO_POWER_DESCRIPTOR 0x0220
 #endif  // ZDO_POWER_DESCRIPTOR
+#ifndef DEFAULT_IDENTIFY_DURATION_S
+#define DEFAULT_IDENTIFY_DURATION_S 10
+#endif
 
 #define LED_BLINK_SHORT_MS         100
 #define LED_BLINK_LONG_MS          750
@@ -271,7 +274,10 @@ EmberNetworkStatus dnjcInit(void)
 EmberNetworkStatus dnjcIndicateNetworkState(void)
 {
   EmberNetworkStatus nwkState = emberAfNetworkState();
-  sl_zigbee_app_debug_println("%d Indicating Current Network State: %d", TIMESTAMP_MS, nwkState);
+  sl_zigbee_app_debug_println("%d Indicating Current Network State: %d, sleep control: %d",
+                              TIMESTAMP_MS,
+                              nwkState,
+                              emberAfGetDefaultSleepControlCallback());
 
   switch (nwkState) {
     case EMBER_JOINED_NETWORK:
@@ -320,7 +326,7 @@ static bool writeIdentifyTime(uint16_t identifyTime)
 
 static void startIdentifying(void)
 {
-  writeIdentifyTime(180);
+  writeIdentifyTime(DEFAULT_IDENTIFY_DURATION_S);
 }
 
 static void stopIdentifying(void)
