@@ -233,6 +233,7 @@ source:
   - path: mods/device-nwk-join-control.c
   - path: mods/rz_button_press.h
   - path: mods/rz_button_press.c
+  - path: mods/battery-controller.c
   - path: light/hw_light.h
   - path: light/hw_light.c
   - path: light/logical_light.h
