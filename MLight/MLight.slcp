@@ -284,4 +284,4 @@ tag:
 
 sdk_extension:
   - id: raz1_custom_components
-    version: 0.0.2
+    version: 0.0.3
