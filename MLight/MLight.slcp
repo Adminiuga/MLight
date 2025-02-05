@@ -23,8 +23,6 @@ component:
   - id: zigbee_end_device_support
     condition: [ zigbee_pro_leaf_stack ]
   - id: zigbee_source_route
-  - id: zigbee_enhanced_routing
-    condition: [ zigbee_pro_router_stack, zigbee_r23_support ]
   - id: bluetooth_stack
   - id: gatt_configuration
   - id: bluetooth_feature_system
@@ -83,6 +81,12 @@ component:
   - {id: zigbee_ota_storage_simple_eeprom}
   - {id: slot_manager}
   - {from: raz1_custom_components, id: rz_led_blink}
+  - id: power_configuration_server
+    from: raz1_custom_components
+    condition: [ mgm210la22jif ]
+  - id: power_configuration_server
+    from: raz1_custom_components
+    condition: [ efr32mg12p332f1024gl125 ]
 
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
@@ -212,6 +216,11 @@ configuration:
     value: USE_FIRST_SLOT
     condition:
       - zigbee_ota_client
+  - name: SL_POWER_CONFIGURATION_BATTERY_TYPE
+    value: SL_POWER_CONFIGURATION_BATTERY_TYPE_18650
+    condition:
+      - efr32mg12p332f1024gl125
+      - power_configuration_server
 
 define:
   - name: OS_CFG_COMPAT_INIT
@@ -224,6 +233,7 @@ source:
   - path: mods/device-nwk-join-control.c
   - path: mods/rz_button_press.h
   - path: mods/rz_button_press.c
+  - path: mods/battery-controller.c
   - path: light/hw_light.h
   - path: light/hw_light.c
   - path: light/logical_light.h
@@ -249,6 +259,21 @@ config_file:
     path: template/brd4181b/sl_simple_rgb_pwm_led_rgb_led0_config.h
   - path: template/rz_button_press_config.h
     file_id: rz_button_press_configuration_file_id
+  - path: template/tbs2/sl_battery_monitor_config.h
+    override:
+      component: "%extension-raz1_custom_components%sl_battery_monitor_v2"
+      file_id: sl_battery_monitor_config
+    condition: [ sl_battery_monitor, efr32mg12p332f1024gl125 ]
+  - path: template/brd_mgm210_expansion/sl_battery_monitor_config.h
+    override:
+      component: "%extension-raz1_custom_components%sl_battery_monitor_v2"
+      file_id: sl_battery_monitor_config
+    condition: [ sl_battery_monitor, mgm210la22jif ]
+  - path: template/brd_mgm210_expansion/power_configuration_server_config.h
+    override:
+      component: "%extension-raz1_custom_components%power_configuration_server"
+      file_id: power_configuration_server
+    condition: [ sl_battery_monitor, mgm210la22jif ]
 
 include:
   - path: ./
@@ -259,4 +284,4 @@ tag:
 
 sdk_extension:
   - id: raz1_custom_components
-    version: 0.0.2
+    version: 0.0.3
