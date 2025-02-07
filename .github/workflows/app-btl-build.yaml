@@ -130,6 +130,7 @@ jobs:
       remove_components: ${{ matrix.without }}
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
+      sdkpatchpath: "patches/app/v${{ inputs.sdk_version }}"
       metadata_extra: "{}"
       ota_string: ${{ inputs.app_ota_string }}
       sdk_extensions: >-
@@ -209,6 +210,7 @@ jobs:
       remove_components: ${{ matrix.without }}
       extra_c_defs: ""
       sdk_version: ${{ inputs.sdk_version }}
+      sdkpatchpath: "patches/app/v${{ inputs.sdk_version }}"
       metadata_extra: "{}"
       ota_string: ${{ inputs.app_ota_string }}
       sdk_extensions: >-
