@@ -204,10 +204,12 @@ sl_status_t hw_light_turn_ch_onoff(enum RGB_channel_name_t ch_name, bool turn_on
     sl_pwm_led_start( ch );
     ch->state = SL_LED_CURRENT_STATE_ON;
     context->state = SL_LED_CURRENT_STATE_ON;
+    hw_light_enable();
   } else {
     sl_pwm_led_stop( ch );
     ch->state = SL_LED_CURRENT_STATE_OFF;
     context->state = SL_LED_CURRENT_STATE_OFF;
+    hw_light_disable();
   }
   handle_sleep_requirements();
   return SL_STATUS_OK;
@@ -250,7 +252,14 @@ uint8_t hw_light_get_brightness()
  */
 void hw_light_enable(void)
 {
-    GPIO_PinOutSet(SL_SIMPLE_RGB_ENABLE_PORT, SL_SIMPLE_RGB_ENABLE_PIN);
+    // this is only needed for Thunderboard Sense 2
+    sl_simple_rgb_pwm_led_context_t *context = RGB_LIGHT->led_common.context;
+    if ( SL_LED_CURRENT_STATE_ON == context->red->state
+         || SL_LED_CURRENT_STATE_ON == context->green->state
+         || SL_LED_CURRENT_STATE_ON == context->blue->state ) {
+      sl_zigbee_app_debug_println("Enabling RGB light");
+      GPIO_PinOutSet(SL_SIMPLE_RGB_ENABLE_PORT, SL_SIMPLE_RGB_ENABLE_PIN);
+    }
 }
 
 
@@ -259,7 +268,14 @@ void hw_light_enable(void)
  */
 void hw_light_disable(void)
 {
-    GPIO_PinOutClear(SL_SIMPLE_RGB_ENABLE_PORT, SL_SIMPLE_RGB_ENABLE_PIN);
+    // this is only needed for Thunderboard Sense 2
+    sl_simple_rgb_pwm_led_context_t *context = RGB_LIGHT->led_common.context;
+    if ( SL_LED_CURRENT_STATE_OFF == context->red->state
+         && SL_LED_CURRENT_STATE_ON == context->green->state
+         && SL_LED_CURRENT_STATE_ON == context->blue->state ) {
+      sl_zigbee_app_debug_println("Disabling RGB light");
+      GPIO_PinOutClear(SL_SIMPLE_RGB_ENABLE_PORT, SL_SIMPLE_RGB_ENABLE_PIN);
+    }
 }
 
 #endif // SL_SIMPLE_RGB_ENABLE_PORT && SL_SIMPLE_RGB_ENABLE_PIN
