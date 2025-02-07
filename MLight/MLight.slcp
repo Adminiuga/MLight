@@ -134,7 +134,11 @@ configuration:
     condition:
       - zigbee_end_device_support
   - name: EMBER_AF_PLUGIN_END_DEVICE_SUPPORT_WAKE_TIMEOUT_SECONDS
-    value: 1.5f
+    value: 3
+    condition:
+      - zigbee_end_device_support
+  - name: EMBER_AF_REJOIN_ATTEMPTS_MAX
+    value: 128
     condition:
       - zigbee_end_device_support
   - name: SL_IOSTREAM_USART_VCOM_RESTRICT_ENERGY_MODE_TO_ALLOW_RECEPTION
