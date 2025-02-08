@@ -2,7 +2,7 @@
 #define _DEVICE_NWK_JOIN_CONTROL_H_
 
 #ifndef DNJC_STARTUP_STATUS_DELAY_MS
-#define DNJC_STARTUP_STATUS_DELAY_MS 3000
+#define DNJC_STARTUP_STATUS_DELAY_MS 5000
 #endif
 
 #include <af-types.h>
