@@ -115,7 +115,6 @@ void emberAfStackStatusCallback(EmberStatus status)
   EmberNetworkStatus nwkState = emberAfNetworkState();
   sl_zigbee_app_debug_println("%d (dnjc) Stack status=0x%X, nwkState=%d", TIMESTAMP_MS, status, nwkState);
 
-  bool is_moving;
   switch (nwkState) {
     case EMBER_NO_NETWORK:
       // Keep trying finding the network
@@ -127,8 +126,7 @@ void emberAfStackStatusCallback(EmberStatus status)
       break;
 
     case EMBER_JOINED_NETWORK_NO_PARENT:
-      is_moving = emberAfMoveInProgressCallback();
-      sl_zigbee_app_debug_println("EMBER_JOINED_NETWORK_NO_PARENT, is_moving=%d", is_moving);
+      sl_zigbee_app_debug_println("EMBER_JOINED_NETWORK_NO_PARENT");
       break;
 
     default:
