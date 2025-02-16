@@ -134,7 +134,7 @@ jobs:
       metadata_extra: "{}"
       ota_string: ${{ inputs.app_ota_string }}
       sdk_extensions: >-
-        "https://github.com/Adminiuga/Raz1_custom_components_extension"
+        "https://github.com/Adminiuga/Raz1_custom_components_extension#v0.0.3"
       with_bootloader: ${{ needs.bootloader-build.outputs.project_name }}
 
   app-firmware-build:
@@ -214,7 +214,7 @@ jobs:
       metadata_extra: "{}"
       ota_string: ${{ inputs.app_ota_string }}
       sdk_extensions: >-
-        "https://github.com/Adminiuga/Raz1_custom_components_extension"
+        "https://github.com/Adminiuga/Raz1_custom_components_extension#v0.0.3"
 
   bootloader-build:
     if: inputs.build_btl
